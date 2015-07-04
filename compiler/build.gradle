@@ -1,0 +1,6 @@
+apply plugin: 'java'
+
+dependencies {
+    compile project(':annotations')
+    compile files("${System.properties['java.home']}/../lib/tools.jar")
+}

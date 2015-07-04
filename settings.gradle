@@ -1,0 +1,1 @@
+include ':annotations', ':example', ':compiler', ':core'
