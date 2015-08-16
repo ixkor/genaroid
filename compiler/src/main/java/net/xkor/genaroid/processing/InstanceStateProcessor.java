@@ -23,7 +23,6 @@ import com.sun.tools.javac.tree.JCTree.JCStatement;
 import com.sun.tools.javac.util.Name;
 
 import net.xkor.genaroid.GenaroidEnvironment;
-import net.xkor.genaroid.annotations.InstanceState;
 import net.xkor.genaroid.tree.GField;
 import net.xkor.genaroid.tree.GMethod;
 import net.xkor.genaroid.wrap.ActivityWrapper;
@@ -36,6 +35,8 @@ import net.xkor.genaroid.wrap.SupportFragmentWrapper;
 import javax.tools.Diagnostic;
 
 public class InstanceStateProcessor implements SubProcessor {
+    public static final String INSTANCE_STATE_ANNOTATION_SIMPLE = "InstanceState";
+    public static final String INSTANCE_STATE_ANNOTATION = "net.xkor.genaroid.annotations.InstanceState";
 
     @Override
     public void process(GenaroidEnvironment environment) {
@@ -46,8 +47,8 @@ public class InstanceStateProcessor implements SubProcessor {
         BundleWrapper bundleWrapper = new BundleWrapper(environment);
         Type serializableType = utils.getTypeElement("java.io.Serializable").asType();
 
-        for (GField field : environment.getGElementsAnnotatedWith(InstanceState.class, GField.class)) {
-            JCTree.JCAnnotation annotation = field.extractAnnotation(InstanceState.class);
+        for (GField field : environment.getGElementsAnnotatedWith(INSTANCE_STATE_ANNOTATION, GField.class)) {
+            JCTree.JCAnnotation annotation = field.extractAnnotation(INSTANCE_STATE_ANNOTATION);
             Type fieldType = ((Symbol.VarSymbol) field.getElement()).asType();
             Symbol.MethodSymbol putMethod = bundleWrapper.getMethodForPutType(fieldType);
             Symbol.MethodSymbol getMethod = bundleWrapper.getMethodForGetType(fieldType);
@@ -69,7 +70,7 @@ public class InstanceStateProcessor implements SubProcessor {
                 uiContainerWrapper = fragmentWrapper;
             } else {
                 environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                        "Annotation " + InstanceState.class.getSimpleName() + " can be applied only to field of Activity or Fragment",
+                        "Annotation " + INSTANCE_STATE_ANNOTATION_SIMPLE + " can be applied only to field of Activity or Fragment",
                         field.getElement());
                 continue;
             }

@@ -90,7 +90,7 @@ public class GenaroidEnvironment {
         this.roundEnvironment = roundEnvironment;
     }
 
-    public <T extends GElement> Set<T> getGElementsAnnotatedWith(Class<? extends Annotation> annotationClass, Class<T> elementClass) {
+    public <T extends GElement> Set<T> getGElementsAnnotatedWith(String annotationClass, Class<T> elementClass) {
         Set<T> result = new HashSet<>();
         for (Element element : roundEnvironment.getElementsAnnotatedWith(annotationClass)) {
             GElement gElement = null;
@@ -120,7 +120,7 @@ public class GenaroidEnvironment {
                 elementAnnotations.toArray(new JCAnnotation[elementAnnotations.size()]));
     }
 
-    public JCAnnotation findAnnotation(JCModifiers modifiers, Class<?> annotationClass) {
+    public JCAnnotation findAnnotation(JCModifiers modifiers, String annotationClass) {
         for (JCAnnotation annotation : modifiers.annotations) {
             if (equalAnnotation(annotation, annotationClass)) {
                 return annotation;
@@ -129,9 +129,9 @@ public class GenaroidEnvironment {
         return null;
     }
 
-    public boolean equalAnnotation(JCAnnotation jcAnnotation, Class<?> annotationClass) {
+    public boolean equalAnnotation(JCAnnotation jcAnnotation, String annotationClass) {
         String name = jcAnnotation.getAnnotationType().toString();
-        return name.equals(annotationClass.getSimpleName()) || name.equals(annotationClass.getCanonicalName());
+        return name.equals(annotationClass) || annotationClass.endsWith("." + name);
     }
 
 //    public Element findElement(JCCompilationUnit compilationUnit, JCTree tree) {

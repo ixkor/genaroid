@@ -1,6 +1,64 @@
 apply plugin: 'java'
 
+//apply plugin: 'com.android.library'
+//
+//android {
+//    compileSdkVersion 22
+//    buildToolsVersion "22.0.1"
+//
+//    defaultConfig {
+//        minSdkVersion 9
+//        targetSdkVersion 22
+//        versionCode 1
+//        versionName "1.0"
+//    }
+//    buildTypes {
+//        release {
+//            minifyEnabled false
+//            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+//        }
+//    }
+//}
+//
+//private def readLocalPropertiesValue(key) {
+//    def rootDir = project.rootDir
+//    def localProperties = new File(rootDir, "local.properties")
+//    if (localProperties.exists()) {
+//        Properties properties = new Properties()
+//        localProperties.withInputStream { instr ->
+//            properties.load(instr)
+//        }
+//        return properties.getProperty('sdk.dir')
+//    }
+//    return ""
+//}
+//
+//private def guessSdkDir() {
+//    def sdkDir = readLocalPropertiesValue("sdk.dir")
+//    if (sdkDir) {
+//        return sdkDir
+//    }
+//
+//    [
+//            "/Applications/Android Studio.app/sdk",
+//            "/usr/local/opt/android-sdk", // brew --prefix android-sdk
+//            System.getenv("ANDROID_SDK"),
+//            System.getenv("ANDROID_HOME"),
+//    ].each { dir ->
+//        if (dir != null && file(dir).exists()) {
+//            sdkDir = dir
+//        }
+//    }
+//    return sdkDir
+//}
+
+//repositories {
+//    maven {
+//        url "${guessSdkDir()}/extras/android/m2repository"
+//    }
+//}
+
 dependencies {
-    compile project(':annotations')
+//    compile project(':core')
     compile files("${System.properties['java.home']}/../lib/tools.jar")
 }

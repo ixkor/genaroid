@@ -17,13 +17,11 @@ package net.xkor.genaroid;
 
 import com.sun.tools.javac.util.List;
 
-import net.xkor.genaroid.annotations.ViewById;
 import net.xkor.genaroid.processing.InstanceStateProcessor;
 import net.xkor.genaroid.processing.SubProcessor;
 import net.xkor.genaroid.processing.ViewByIdProcessor;
 import net.xkor.genaroid.tree.GUnit;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -96,7 +94,7 @@ public class GenaroidProcessor extends AbstractProcessor {
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         return new HashSet<String>() {{
-            add(ViewById.class.getCanonicalName());
+            add("net.xkor.genaroid.annotations.ViewById");
         }};
     }
 

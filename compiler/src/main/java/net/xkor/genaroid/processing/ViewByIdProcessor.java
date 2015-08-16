@@ -24,7 +24,6 @@ import com.sun.tools.javac.tree.JCTree.JCStatement;
 import com.sun.tools.javac.util.Name;
 
 import net.xkor.genaroid.GenaroidEnvironment;
-import net.xkor.genaroid.annotations.ViewById;
 import net.xkor.genaroid.tree.GField;
 import net.xkor.genaroid.tree.GMethod;
 import net.xkor.genaroid.wrap.ActivityWrapper;
@@ -36,6 +35,8 @@ import net.xkor.genaroid.wrap.ViewWrapper;
 import javax.tools.Diagnostic;
 
 public class ViewByIdProcessor implements SubProcessor {
+    public static final String VIEW_BY_ID_ANNOTATION_SIMPLE = "ViewById";
+    public static final String VIEW_BY_ID_ANNOTATION = "net.xkor.genaroid.annotations.ViewById";
 
     @Override
     public void process(GenaroidEnvironment environment) {
@@ -45,8 +46,8 @@ public class ViewByIdProcessor implements SubProcessor {
         BaseFragmentWrapper supportFragmentWrapper = new SupportFragmentWrapper(utils);
         ViewWrapper viewWrapper = new ViewWrapper(utils);
 
-        for (GField field : environment.getGElementsAnnotatedWith(ViewById.class, GField.class)) {
-            JCTree.JCAnnotation annotation = field.extractAnnotation(ViewById.class);
+        for (GField field : environment.getGElementsAnnotatedWith(VIEW_BY_ID_ANNOTATION, GField.class)) {
+            JCTree.JCAnnotation annotation = field.extractAnnotation(VIEW_BY_ID_ANNOTATION);
             JCTree fieldType = field.getTree().getType();
             JCExpression value = annotation.getArguments().get(0);
             if (value instanceof JCAssign) {
@@ -54,7 +55,7 @@ public class ViewByIdProcessor implements SubProcessor {
             }
             if (!environment.getTypes().isSubtype(((Symbol.VarSymbol) field.getElement()).asType(), viewWrapper.getClassSymbol().asType())) {
                 environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                        "Annotation " + ViewById.class.getSimpleName() + " can be applied only to field with type extended of View",
+                        "Annotation " + VIEW_BY_ID_ANNOTATION_SIMPLE + " can be applied only to field with type extended of View",
                         field.getElement());
             }
             if (field.getGClass().isSubClass(activityWrapper.getClassSymbol())) {
@@ -79,7 +80,7 @@ public class ViewByIdProcessor implements SubProcessor {
                 onDestroyViewMethod.prependCode(fieldUnsetStatement);
             } else {
                 environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                        "Annotation " + ViewById.class.getSimpleName() + " can be applied only to field of Activity or Fragment",
+                        "Annotation " + VIEW_BY_ID_ANNOTATION_SIMPLE + " can be applied only to field of Activity or Fragment",
                         field.getElement());
             }
         }

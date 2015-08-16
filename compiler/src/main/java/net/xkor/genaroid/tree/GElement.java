@@ -63,7 +63,7 @@ public abstract class GElement {
 
     protected abstract JCModifiers getModifiers();
 
-    public JCAnnotation getAnnotation(Class<?> annotationClass) {
+    public JCAnnotation getAnnotation(String annotationClass) {
         return getEnvironment().findAnnotation(getModifiers(), annotationClass);
     }
 
@@ -71,7 +71,7 @@ public abstract class GElement {
         getEnvironment().removeAnnotation(getModifiers(), annotation);
     }
 
-    public JCAnnotation extractAnnotation(Class<?> annotationClass) {
+    public JCAnnotation extractAnnotation(String annotationClass) {
         JCAnnotation annotation = getAnnotation(annotationClass);
         if (annotation != null) {
             removeAnnotation(annotation);

@@ -38,7 +38,6 @@ public class MainActivity extends GenaroidActivity {
     @ViewById(R.id.testId)
     private View test2;
 
-    @ViewById(R.id.testId)
     @InstanceState
     private int intField;
 
@@ -57,10 +56,10 @@ public class MainActivity extends GenaroidActivity {
     @InstanceState
     private TestClass serField;
 
-    @InstanceState
-    private Account accountField;
-    @InstanceState
-    private Account[] accountsField;
+//    @InstanceState
+//    private Account accountField;
+//    @InstanceState
+//    private Account[] accountsField;
     @InstanceState
     private ArrayList<Account> accountListField;
 
