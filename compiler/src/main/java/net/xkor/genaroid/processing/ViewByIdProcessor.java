@@ -32,22 +32,26 @@ import net.xkor.genaroid.wrap.FragmentWrapper;
 import net.xkor.genaroid.wrap.SupportFragmentWrapper;
 import net.xkor.genaroid.wrap.ViewWrapper;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.tools.Diagnostic;
 
 public class ViewByIdProcessor implements SubProcessor {
-    public static final String VIEW_BY_ID_ANNOTATION_SIMPLE = "ViewById";
-    public static final String VIEW_BY_ID_ANNOTATION = "net.xkor.genaroid.annotations.ViewById";
+    private static final String VIEW_BY_ID_ANNOTATION = "net.xkor.genaroid.annotations.ViewById";
 
     @Override
     public void process(GenaroidEnvironment environment) {
         JavacElements utils = environment.getUtils();
+        Symbol.ClassSymbol viewByIdType = utils.getTypeElement(VIEW_BY_ID_ANNOTATION);
         ActivityWrapper activityWrapper = new ActivityWrapper(utils);
         BaseFragmentWrapper fragmentWrapper = new FragmentWrapper(utils);
         BaseFragmentWrapper supportFragmentWrapper = new SupportFragmentWrapper(utils);
         ViewWrapper viewWrapper = new ViewWrapper(utils);
 
-        for (GField field : environment.getGElementsAnnotatedWith(VIEW_BY_ID_ANNOTATION, GField.class)) {
-            JCTree.JCAnnotation annotation = field.extractAnnotation(VIEW_BY_ID_ANNOTATION);
+        for (GField field : environment.getGElementsAnnotatedWith(viewByIdType, GField.class)) {
+            JCTree.JCAnnotation annotation = field.extractAnnotation(viewByIdType);
             JCTree fieldType = field.getTree().getType();
             JCExpression value = annotation.getArguments().get(0);
             if (value instanceof JCAssign) {
@@ -55,7 +59,7 @@ public class ViewByIdProcessor implements SubProcessor {
             }
             if (!environment.getTypes().isSubtype(((Symbol.VarSymbol) field.getElement()).asType(), viewWrapper.getClassSymbol().asType())) {
                 environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                        "Annotation " + VIEW_BY_ID_ANNOTATION_SIMPLE + " can be applied only to field with type extended of View",
+                        "Annotation " + viewByIdType.getSimpleName() + " can be applied only to field with type extended of View",
                         field.getElement());
             }
             if (field.getGClass().isSubClass(activityWrapper.getClassSymbol())) {
@@ -80,9 +84,14 @@ public class ViewByIdProcessor implements SubProcessor {
                 onDestroyViewMethod.prependCode(fieldUnsetStatement);
             } else {
                 environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                        "Annotation " + VIEW_BY_ID_ANNOTATION_SIMPLE + " can be applied only to field of Activity or Fragment",
+                        "Annotation " + viewByIdType.getSimpleName() + " can be applied only to field of Activity or Fragment",
                         field.getElement());
             }
         }
+    }
+
+    @Override
+    public Set<String> getSupportedAnnotationTypes() {
+        return Collections.singleton(VIEW_BY_ID_ANNOTATION);
     }
 }

@@ -16,6 +16,7 @@
 package net.xkor.genaroid;
 
 import com.sun.tools.javac.api.JavacTrees;
+import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.model.JavacElements;
@@ -90,7 +91,7 @@ public class GenaroidEnvironment {
         this.roundEnvironment = roundEnvironment;
     }
 
-    public <T extends GElement> Set<T> getGElementsAnnotatedWith(String annotationClass, Class<T> elementClass) {
+    public <T extends GElement> Set<T> getGElementsAnnotatedWith(Symbol.ClassSymbol annotationClass, Class<T> elementClass) {
         Set<T> result = new HashSet<>();
         for (Element element : roundEnvironment.getElementsAnnotatedWith(annotationClass)) {
             GElement gElement = null;
@@ -120,7 +121,7 @@ public class GenaroidEnvironment {
                 elementAnnotations.toArray(new JCAnnotation[elementAnnotations.size()]));
     }
 
-    public JCAnnotation findAnnotation(JCModifiers modifiers, String annotationClass) {
+    public JCAnnotation findAnnotation(JCModifiers modifiers, Symbol.ClassSymbol annotationClass) {
         for (JCAnnotation annotation : modifiers.annotations) {
             if (equalAnnotation(annotation, annotationClass)) {
                 return annotation;
@@ -129,9 +130,9 @@ public class GenaroidEnvironment {
         return null;
     }
 
-    public boolean equalAnnotation(JCAnnotation jcAnnotation, String annotationClass) {
+    public boolean equalAnnotation(JCAnnotation jcAnnotation, Symbol.ClassSymbol annotationClass) {
         String name = jcAnnotation.getAnnotationType().toString();
-        return name.equals(annotationClass) || annotationClass.endsWith("." + name);
+        return name.equals(annotationClass.className()) || name.equals(annotationClass.getSimpleName().toString());
     }
 
 //    public Element findElement(JCCompilationUnit compilationUnit, JCTree tree) {

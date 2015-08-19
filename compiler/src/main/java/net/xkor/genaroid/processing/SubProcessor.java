@@ -17,6 +17,9 @@ package net.xkor.genaroid.processing;
 
 import net.xkor.genaroid.GenaroidEnvironment;
 
+import java.util.Set;
+
 public interface SubProcessor {
     void process(GenaroidEnvironment environment);
+    Set<String> getSupportedAnnotationTypes();
 }

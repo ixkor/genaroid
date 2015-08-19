@@ -32,23 +32,26 @@ import net.xkor.genaroid.wrap.BundleWrapper;
 import net.xkor.genaroid.wrap.FragmentWrapper;
 import net.xkor.genaroid.wrap.SupportFragmentWrapper;
 
+import java.util.Collections;
+import java.util.Set;
+
 import javax.tools.Diagnostic;
 
 public class InstanceStateProcessor implements SubProcessor {
-    public static final String INSTANCE_STATE_ANNOTATION_SIMPLE = "InstanceState";
-    public static final String INSTANCE_STATE_ANNOTATION = "net.xkor.genaroid.annotations.InstanceState";
+    private static final String INSTANCE_STATE_ANNOTATION = "net.xkor.genaroid.annotations.InstanceState";
 
     @Override
     public void process(GenaroidEnvironment environment) {
         JavacElements utils = environment.getUtils();
+        Symbol.ClassSymbol instanceStateType = utils.getTypeElement(INSTANCE_STATE_ANNOTATION);
         ActivityWrapper activityWrapper = new ActivityWrapper(utils);
         BaseFragmentWrapper fragmentWrapper = new FragmentWrapper(utils);
         BaseFragmentWrapper supportFragmentWrapper = new SupportFragmentWrapper(utils);
         BundleWrapper bundleWrapper = new BundleWrapper(environment);
         Type serializableType = utils.getTypeElement("java.io.Serializable").asType();
 
-        for (GField field : environment.getGElementsAnnotatedWith(INSTANCE_STATE_ANNOTATION, GField.class)) {
-            JCTree.JCAnnotation annotation = field.extractAnnotation(INSTANCE_STATE_ANNOTATION);
+        for (GField field : environment.getGElementsAnnotatedWith(instanceStateType, GField.class)) {
+            JCTree.JCAnnotation annotation = field.extractAnnotation(instanceStateType);
             Type fieldType = ((Symbol.VarSymbol) field.getElement()).asType();
             Symbol.MethodSymbol putMethod = bundleWrapper.getMethodForPutType(fieldType);
             Symbol.MethodSymbol getMethod = bundleWrapper.getMethodForGetType(fieldType);
@@ -70,7 +73,7 @@ public class InstanceStateProcessor implements SubProcessor {
                 uiContainerWrapper = fragmentWrapper;
             } else {
                 environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                        "Annotation " + INSTANCE_STATE_ANNOTATION_SIMPLE + " can be applied only to field of Activity or Fragment",
+                        "Annotation " + instanceStateType.getSimpleName() + " can be applied only to field of Activity or Fragment",
                         field.getElement());
                 continue;
             }
@@ -96,5 +99,10 @@ public class InstanceStateProcessor implements SubProcessor {
             JCStatement restoreStatement = environment.createParser(restoreCode).parseStatement();
             onCreateMethod.prependCode(restoreStatement);
         }
+    }
+
+    @Override
+    public Set<String> getSupportedAnnotationTypes() {
+        return Collections.singleton(INSTANCE_STATE_ANNOTATION);
     }
 }

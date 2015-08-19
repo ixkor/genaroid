@@ -41,14 +41,16 @@ public class GenaroidProcessor extends AbstractProcessor {
     private GenaroidEnvironment genaroidEnvironment = new GenaroidEnvironment();
     private ArrayList<SubProcessor> processors = new ArrayList<>();
 
+    public GenaroidProcessor() {
+        processors.clear();
+        processors.add(new ViewByIdProcessor());
+        processors.add(new InstanceStateProcessor());
+    }
+
     @Override
     public void init(ProcessingEnvironment procEnv) {
         super.init(procEnv);
         genaroidEnvironment.init(procEnv);
-
-        processors.clear();
-        processors.add(new ViewByIdProcessor());
-        processors.add(new InstanceStateProcessor());
     }
 
     @Override
@@ -93,9 +95,11 @@ public class GenaroidProcessor extends AbstractProcessor {
 
     @Override
     public Set<String> getSupportedAnnotationTypes() {
-        return new HashSet<String>() {{
-            add("net.xkor.genaroid.annotations.ViewById");
-        }};
+        HashSet<String> types = new HashSet<>();
+        for (SubProcessor processor : processors) {
+            types.addAll(processor.getSupportedAnnotationTypes());
+        }
+        return types;
     }
 
     @Override

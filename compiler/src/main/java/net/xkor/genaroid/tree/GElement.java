@@ -15,6 +15,7 @@
  */
 package net.xkor.genaroid.tree;
 
+import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCAnnotation;
 import com.sun.tools.javac.tree.JCTree.JCModifiers;
@@ -63,7 +64,7 @@ public abstract class GElement {
 
     protected abstract JCModifiers getModifiers();
 
-    public JCAnnotation getAnnotation(String annotationClass) {
+    public JCAnnotation getAnnotation(Symbol.ClassSymbol annotationClass) {
         return getEnvironment().findAnnotation(getModifiers(), annotationClass);
     }
 
@@ -71,7 +72,7 @@ public abstract class GElement {
         getEnvironment().removeAnnotation(getModifiers(), annotation);
     }
 
-    public JCAnnotation extractAnnotation(String annotationClass) {
+    public JCAnnotation extractAnnotation(Symbol.ClassSymbol annotationClass) {
         JCAnnotation annotation = getAnnotation(annotationClass);
         if (annotation != null) {
             removeAnnotation(annotation);
