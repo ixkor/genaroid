@@ -7,10 +7,10 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.METHOD)
-public @interface SharedPrefItem {
+public @interface SharedPrefString {
     String key();
 
     int keyResId();
 
-    int defaultValueResId();
+    String defaultValue();
 }

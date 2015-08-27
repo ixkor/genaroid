@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)
-public @interface SharedPrefGroup {
+public @interface SharedPrefsGroup {
 
     /**
      * Represents the scope of a SharedPreference.
