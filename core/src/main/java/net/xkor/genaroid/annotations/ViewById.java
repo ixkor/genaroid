@@ -13,7 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package net.xkor.genaroid.annotations;
+
+import android.view.View;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -29,9 +32,9 @@ import java.lang.annotation.Target;
  * The annotation value should be one of R.id.* fields.
  * </p>
  * <blockquote>
- *
+ * <p/>
  * Example :
- *
+ * <p/>
  * <pre>
  * public class MyActivity extends GenaroidActivity {
  *
@@ -46,7 +49,7 @@ import java.lang.annotation.Target;
  *    }
  * }
  * </pre>
- *
+ * <p/>
  * </blockquote>
  */
 @Retention(RetentionPolicy.SOURCE)
@@ -58,4 +61,10 @@ public @interface ViewById {
      * @return the id of the View
      */
     int value();
+
+    interface Executor {
+        void _gen_findViews(View rootView);
+
+        void _gen_clearViews();
+    }
 }

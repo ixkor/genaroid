@@ -13,7 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package net.xkor.genaroid.annotations;
+
+import android.os.Bundle;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -23,4 +26,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.FIELD)
 public @interface InstanceState {
+    interface Executor {
+        void _gen_saveInstanceState(Bundle outState);
+
+        void _gen_restoreInstanceState(Bundle savedState);
+    }
 }

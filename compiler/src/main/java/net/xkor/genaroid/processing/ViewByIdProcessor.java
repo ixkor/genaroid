@@ -24,16 +24,13 @@ import com.sun.tools.javac.tree.JCTree.JCStatement;
 import com.sun.tools.javac.util.Name;
 
 import net.xkor.genaroid.GenaroidEnvironment;
+import net.xkor.genaroid.tree.GClass;
 import net.xkor.genaroid.tree.GField;
 import net.xkor.genaroid.tree.GMethod;
-import net.xkor.genaroid.wrap.ActivityWrapper;
-import net.xkor.genaroid.wrap.BaseFragmentWrapper;
-import net.xkor.genaroid.wrap.FragmentWrapper;
-import net.xkor.genaroid.wrap.SupportFragmentWrapper;
+import net.xkor.genaroid.wrap.BaseClassWrapper;
 import net.xkor.genaroid.wrap.ViewWrapper;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 
 import javax.tools.Diagnostic;
@@ -45,12 +42,14 @@ public class ViewByIdProcessor implements SubProcessor {
     public void process(GenaroidEnvironment environment) {
         JavacElements utils = environment.getUtils();
         Symbol.ClassSymbol viewByIdType = utils.getTypeElement(VIEW_BY_ID_ANNOTATION);
-        ActivityWrapper activityWrapper = new ActivityWrapper(utils);
-        BaseFragmentWrapper fragmentWrapper = new FragmentWrapper(utils);
-        BaseFragmentWrapper supportFragmentWrapper = new SupportFragmentWrapper(utils);
+//        ActivityWrapper activityWrapper = new ActivityWrapper(utils);
+//        BaseFragmentWrapper fragmentWrapper = new FragmentWrapper(utils);
+//        BaseFragmentWrapper supportFragmentWrapper = new SupportFragmentWrapper(utils);
         ViewWrapper viewWrapper = new ViewWrapper(utils);
+        ExecutorWrapper executorWrapper = new ExecutorWrapper(utils);
 
-        for (GField field : environment.getGElementsAnnotatedWith(viewByIdType, GField.class)) {
+        Set<GField> allFields = environment.getGElementsAnnotatedWith(viewByIdType, GField.class);
+        for (GField field : allFields) {
             JCTree.JCAnnotation annotation = field.extractAnnotation(viewByIdType);
             JCTree fieldType = field.getTree().getType();
             JCExpression value = annotation.getArguments().get(0);
@@ -62,36 +61,74 @@ public class ViewByIdProcessor implements SubProcessor {
                         "Annotation " + viewByIdType.getSimpleName() + " can be applied only to field with type extended of View",
                         field.getElement());
             }
-            if (field.getGClass().isSubClass(activityWrapper.getClassSymbol())) {
-                GMethod onContentChangedMethod = field.getGClass().overrideMethod(activityWrapper.getOnContentChangedMethod(), true);
-                String fieldSetCode = String.format("this.%s = (%s) findViewById(%s);",
-                        field.getName(), fieldType, value);
-                JCStatement fieldSetStatement = environment.createParser(fieldSetCode).parseStatement();
 
-                onContentChangedMethod.prependCode(fieldSetStatement);
-            } else if (field.getGClass().isSubClass(supportFragmentWrapper.getClassSymbol())
-                    || field.getGClass().isSubClass(fragmentWrapper.getClassSymbol())) {
-                GMethod onViewCreatedMethod = field.getGClass().overrideMethod(fragmentWrapper.getOnViewCreatedMethod(), true);
-                GMethod onDestroyViewMethod = field.getGClass().overrideMethod(fragmentWrapper.getOnDestroyViewMethod(), true);
-                Name viewParam = onViewCreatedMethod.getParamName(0);
-                String fieldSetCode = String.format("this.%s = (%s) %s.findViewById(%s);",
-                        field.getName(), fieldType, viewParam, value);
-                String fieldUnsetCode = String.format("this.%s = null;", field.getName());
-                JCStatement fieldSetStatement = environment.createParser(fieldSetCode).parseStatement();
-                JCStatement fieldUnsetStatement = environment.createParser(fieldUnsetCode).parseStatement();
-
-                onViewCreatedMethod.prependCode(fieldSetStatement);
-                onDestroyViewMethod.prependCode(fieldUnsetStatement);
-            } else {
-                environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                        "Annotation " + viewByIdType.getSimpleName() + " can be applied only to field of Activity or Fragment",
-                        field.getElement());
+            boolean executorImplemented = field.getGClass().isSubClass(executorWrapper.getClassSymbol());
+            if (!executorImplemented) {
+                GClass classToExecutorImplement = field.getGClass();
+                for (GField otherField : allFields) {
+                    if (otherField.getGClass() != classToExecutorImplement && classToExecutorImplement.isSubClass(otherField.getGClass())) {
+                        classToExecutorImplement = otherField.getGClass();
+                    }
+                }
+                classToExecutorImplement.implement(executorWrapper.getClassSymbol());
             }
+
+            GMethod onViewCreatedMethod = field.getGClass().overrideMethod(executorWrapper.getFindViewsMethod(), true);
+            GMethod onDestroyViewMethod = field.getGClass().overrideMethod(executorWrapper.getClearViewsMethod(), true);
+            Name viewParam = onViewCreatedMethod.getParamName(0);
+            String fieldSetCode = String.format("this.%s = (%s) %s.findViewById(%s);",
+                    field.getName(), fieldType, viewParam, value);
+            String fieldUnsetCode = String.format("this.%s = null;", field.getName());
+            JCStatement fieldSetStatement = environment.createParser(fieldSetCode).parseStatement();
+            JCStatement fieldUnsetStatement = environment.createParser(fieldUnsetCode).parseStatement();
+
+            onViewCreatedMethod.prependCode(fieldSetStatement);
+            onDestroyViewMethod.prependCode(fieldUnsetStatement);
+
+//            if (field.getGClass().isSubClass(activityWrapper.getClassSymbol())) {
+//                GMethod onContentChangedMethod = field.getGClass().overrideMethod(activityWrapper.getOnContentChangedMethod(), true);
+//                String fieldSetCode = String.format("this.%s = (%s) findViewById(%s);",
+//                        field.getName(), fieldType, value);
+//                JCStatement fieldSetStatement = environment.createParser(fieldSetCode).parseStatement();
+//
+//                onContentChangedMethod.prependCode(fieldSetStatement);
+//            } else if (field.getGClass().isSubClass(supportFragmentWrapper.getClassSymbol())
+//                    || field.getGClass().isSubClass(fragmentWrapper.getClassSymbol())) {
+//                GMethod onViewCreatedMethod = field.getGClass().overrideMethod(fragmentWrapper.getOnViewCreatedMethod(), true);
+//                GMethod onDestroyViewMethod = field.getGClass().overrideMethod(fragmentWrapper.getOnDestroyViewMethod(), true);
+//                Name viewParam = onViewCreatedMethod.getParamName(0);
+//                String fieldSetCode = String.format("this.%s = (%s) %s.findViewById(%s);",
+//                        field.getName(), fieldType, viewParam, value);
+//                String fieldUnsetCode = String.format("this.%s = null;", field.getName());
+//                JCStatement fieldSetStatement = environment.createParser(fieldSetCode).parseStatement();
+//                JCStatement fieldUnsetStatement = environment.createParser(fieldUnsetCode).parseStatement();
+//
+//                onViewCreatedMethod.prependCode(fieldSetStatement);
+//                onDestroyViewMethod.prependCode(fieldUnsetStatement);
+//            } else {
+//                environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
+//                        "Annotation " + viewByIdType.getSimpleName() + " can be applied only to field of Activity or Fragment",
+//                        field.getElement());
+//            }
         }
     }
 
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         return Collections.singleton(VIEW_BY_ID_ANNOTATION);
+    }
+
+    private class ExecutorWrapper extends BaseClassWrapper {
+        public ExecutorWrapper(JavacElements utils) {
+            super(utils, VIEW_BY_ID_ANNOTATION + ".Executor");
+        }
+
+        public Symbol.MethodSymbol getFindViewsMethod() {
+            return (Symbol.MethodSymbol) getMember("_gen_findViews");
+        }
+
+        public Symbol.MethodSymbol getClearViewsMethod() {
+            return (Symbol.MethodSymbol) getMember("_gen_clearViews");
+        }
     }
 }
