@@ -25,13 +25,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import net.xkor.genaroid.Genaroid;
+import net.xkor.genaroid.annotations.BaseActivity;
+import net.xkor.genaroid.annotations.BaseFragment;
 import net.xkor.genaroid.annotations.InstanceState;
 import net.xkor.genaroid.annotations.ViewById;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 
+@BaseActivity
 public class MainActivity extends AppCompatActivity {
 
     @ViewById(R.id.testId)
@@ -73,16 +75,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Genaroid.findViews(this);
-        Genaroid.restoreInstanceState(this, savedInstanceState);
     }
 
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        Genaroid.saveInstanceState(this, outState);
-    }
-
+    @BaseFragment
     public static class TestFragment extends Fragment {
 
         @ViewById(R.id.testId)
@@ -106,34 +101,10 @@ public class MainActivity extends AppCompatActivity {
         @InstanceState
         private ArrayList<String> stringArrayField;
 
-        @Override
-        public void onCreate(@Nullable Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            Genaroid.restoreInstanceState(this, savedInstanceState);
-        }
-
         @Nullable
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             return inflater.inflate(R.layout.activity_main, container, false);
-        }
-
-        @Override
-        public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-            super.onViewCreated(view, savedInstanceState);
-            Genaroid.findViews(this, view);
-        }
-
-        @Override
-        public void onDestroyView() {
-            super.onDestroyView();
-            Genaroid.clearViews(this);
-        }
-
-        @Override
-        public void onSaveInstanceState(Bundle outState) {
-            super.onSaveInstanceState(outState);
-            Genaroid.saveInstanceState(this, outState);
         }
     }
 
