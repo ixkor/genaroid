@@ -39,7 +39,6 @@ import net.xkor.genaroid.tree.GField;
 import net.xkor.genaroid.tree.GMethod;
 import net.xkor.genaroid.tree.GUnit;
 
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -51,9 +50,10 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.type.TypeKind;
-import javax.tools.Diagnostic;
 
 public class GenaroidEnvironment {
+    public static final String GENAROID_MAIN_CLASS = "net.xkor.genaroid.Genaroid";
+
     private JavacProcessingEnvironment javacProcessingEnv;
     private RoundEnvironment roundEnvironment;
     private TreeMaker maker;
@@ -66,6 +66,7 @@ public class GenaroidEnvironment {
     private JCExpression voidType;
 
     private HashMap<String, GUnit> units = new HashMap<>();
+    private boolean debugMode;
 
     public void init(ProcessingEnvironment procEnv) {
         javacProcessingEnv = (JavacProcessingEnvironment) procEnv;
@@ -77,6 +78,8 @@ public class GenaroidEnvironment {
         types = Types.instance(javacProcessingEnv.getContext());
 
         voidType = maker.Type((Type) typeUtils.getNoType(TypeKind.VOID));
+
+        debugMode = Boolean.parseBoolean(javacProcessingEnv.getOptions().get("debugMode"));
     }
 
     public Pair<JCTree, JCCompilationUnit> getTreeAndTopLevel(Element e) {
@@ -135,10 +138,6 @@ public class GenaroidEnvironment {
         return name.equals(annotationClass.className()) || name.equals(annotationClass.getSimpleName().toString());
     }
 
-//    public Element findElement(JCCompilationUnit compilationUnit, JCTree tree) {
-//        return trees.getElement(trees.getPath(compilationUnit, tree));
-//    }
-
     public TreeMaker getMaker() {
         return maker;
     }
@@ -175,12 +174,11 @@ public class GenaroidEnvironment {
         return units.values();
     }
 
-    //    public void test() {
-//        Symbol.ClassSymbol class_AppCompatActivity = utils.getTypeElement("android.support.v7.app.AppCompatActivity");
-//        GClass clazz = getGClass(class_AppCompatActivity);
-//    }
-
     public Messager getMessager(){
         return javacProcessingEnv.getMessager();
+    }
+
+    public boolean isDebugMode() {
+        return debugMode;
     }
 }

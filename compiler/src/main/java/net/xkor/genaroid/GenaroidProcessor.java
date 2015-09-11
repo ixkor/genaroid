@@ -27,6 +27,7 @@ import net.xkor.genaroid.tree.GUnit;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -74,11 +75,15 @@ public class GenaroidProcessor extends AbstractProcessor {
                 try {
                     JavaFileObject source = processingEnv.getFiler().createSourceFile(
                             unit.getCompilationUnit().getPackageName() + "." + unit.getName());
-                    Writer writer = source.openWriter();
-                    writer.write(unit.getCompilationUnit().toString());
-                    writer.flush();
-                    writer.close();
-                    unit.getCompilationUnit().defs = List.nil();
+                    if (genaroidEnvironment.isDebugMode()) {
+                        Writer writer = source.openWriter();
+                        writer.write(unit.getCompilationUnit().toString());
+                        writer.flush();
+                        writer.close();
+                        unit.getCompilationUnit().defs = List.nil();
+                    } else {
+                        source.delete();
+                    }
                 } catch (IOException e1) {
                     e1.printStackTrace();
                 }
@@ -90,11 +95,6 @@ public class GenaroidProcessor extends AbstractProcessor {
         }
 
         return true;
-    }
-
-    private void logDebug(String message) {
-        System.out.println(message);
-//        processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, message);
     }
 
     @Override
@@ -109,5 +109,10 @@ public class GenaroidProcessor extends AbstractProcessor {
     @Override
     public SourceVersion getSupportedSourceVersion() {
         return SourceVersion.latestSupported();
+    }
+
+    @Override
+    public Set<String> getSupportedOptions() {
+        return Collections.singleton("debugMode");
     }
 }

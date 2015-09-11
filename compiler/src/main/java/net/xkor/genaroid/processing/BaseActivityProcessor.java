@@ -51,6 +51,8 @@ public class BaseActivityProcessor implements SubProcessor {
                 continue;
             }
 
+            activity.getGUnit().addNewImports(GenaroidEnvironment.GENAROID_MAIN_CLASS);
+
             GMethod onSaveInstanceStateMethod = activity.overrideMethod(activityWrapper.getOnSaveInstanceStateMethod(), true);
             Name bundleParam = onSaveInstanceStateMethod.getParamName(0);
             String code = String.format("Genaroid.saveInstanceState(this, %s);", bundleParam);

@@ -43,6 +43,35 @@ public class GUnit {
         this.environment = environment;
     }
 
+    @SafeVarargs
+    private static List<JCImport> mergeImports(List<JCImport> mergedImports, List<JCImport>... importLists) {
+        for (List<JCImport> imports : importLists) {
+            for (JCImport imp : imports) {
+                mergedImports = appendImport(mergedImports, imp);
+            }
+        }
+        return mergedImports;
+    }
+
+    private static List<JCImport> appendImport(List<JCImport> imports, JCImport addImport) {
+        for (JCImport imp : imports) {
+            if (imp.toString().equals(addImport.toString())) {
+                return imports;
+            }
+        }
+        return imports.append(addImport);
+    }
+
+    public static GUnit getGUnit(GenaroidEnvironment environment, Element element) {
+        Pair<JCTree, JCCompilationUnit> pair = environment.getTreeAndTopLevel(element);
+        GUnit unit = environment.getUnit(pair.snd.getSourceFile().getName());
+        if (unit == null) {
+            unit = new GUnit(pair.snd, environment);
+            environment.putUnit(unit);
+        }
+        return unit;
+    }
+
     public Collection<GClass> getGClasses() {
         return classes.values();
     }
@@ -80,25 +109,6 @@ public class GUnit {
         return gClass;
     }
 
-    @SafeVarargs
-    private static List<JCImport> mergeImports(List<JCImport> mergedImports, List<JCImport>... importLists) {
-        for (List<JCImport> imports : importLists) {
-            for (JCImport imp : imports) {
-                mergedImports = appendImport(mergedImports, imp);
-            }
-        }
-        return mergedImports;
-    }
-
-    private static List<JCImport> appendImport(List<JCImport> imports, JCImport addImport) {
-        for (JCImport imp : imports) {
-            if (imp.toString().equals(addImport.toString())) {
-                return imports;
-            }
-        }
-        return imports.append(addImport);
-    }
-
     public void addNewImports(List<JCImport> newImports) {
         List<JCTree> defs = List.nil();
         defs = defs.appendList(List.convert(JCTree.class, mergeImports(compilationUnit.getImports(), newImports)));
@@ -106,14 +116,14 @@ public class GUnit {
         compilationUnit.defs = defs;
     }
 
-    public static GUnit getGUnit(GenaroidEnvironment environment, Element element) {
-        Pair<JCTree, JCCompilationUnit> pair = environment.getTreeAndTopLevel(element);
-        GUnit unit = environment.getUnit(pair.snd.getSourceFile().getName());
-        if (unit == null) {
-            unit = new GUnit(pair.snd, environment);
-            environment.putUnit(unit);
+    public void addNewImports(String... imports) {
+        TreeMaker maker = environment.getMaker();
+        List<JCImport> newImports = List.nil();
+        for (String newImport : imports) {
+            newImports = newImports.append(maker.Import(environment.createParser(newImport).parseType(), false));
         }
-        return unit;
+
+        addNewImports(newImports);
     }
 
     public String getName() {

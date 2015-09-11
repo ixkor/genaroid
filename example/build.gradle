@@ -26,3 +26,9 @@ dependencies {
 //    provided project(':compiler')
     compile 'com.android.support:appcompat-v7:22.2.1'
 }
+
+apt {
+    arguments {
+        debugMode false
+    }
+}

@@ -59,6 +59,8 @@ public class BaseFragmentProcessor implements SubProcessor {
                 continue;
             }
 
+            fragment.getGUnit().addNewImports(GenaroidEnvironment.GENAROID_MAIN_CLASS);
+
             GMethod onSaveInstanceStateMethod = fragment.overrideMethod(fragmentWrapper.getOnSaveInstanceStateMethod(), true);
             Name bundleParam = onSaveInstanceStateMethod.getParamName(0);
             String code = String.format("Genaroid.saveInstanceState(this, %s);", bundleParam);
