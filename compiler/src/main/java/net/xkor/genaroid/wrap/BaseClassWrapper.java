@@ -33,6 +33,7 @@ public class BaseClassWrapper {
     private final String classFullName;
     private final Symbol.ClassSymbol classSymbol;
     private final HashMap<String, Symbol> membersCache = new HashMap<>();
+    private final HashMap<String, Symbol.MethodSymbol> deepMethodsCache = new HashMap<>();
 
     public BaseClassWrapper(JavacElements utils, String classFullName) {
         this.utils = utils;
@@ -46,6 +47,10 @@ public class BaseClassWrapper {
 
     public Symbol.ClassSymbol getClassSymbol() {
         return classSymbol;
+    }
+
+    protected JavacElements getUtils() {
+        return utils;
     }
 
     public Symbol getMember(String name) {
@@ -62,5 +67,27 @@ public class BaseClassWrapper {
             }
         }
         return member;
+    }
+
+    public Symbol.MethodSymbol getMethodRecursive(String name) {
+        return getMethodRecursive(name, noFilter);
+    }
+
+    public Symbol.MethodSymbol getMethodRecursive(String name, Filter<Symbol> filter) {
+        Symbol.MethodSymbol methodSymbol = deepMethodsCache.get(name);
+        if (methodSymbol == null) {
+            methodSymbol = (Symbol.MethodSymbol) getMember(name, filter);
+        }
+        Symbol.ClassSymbol classSymbol = getClassSymbol();
+        while (classSymbol != null && methodSymbol == null) {
+            classSymbol = (Symbol.ClassSymbol) classSymbol.getSuperclass().asElement();
+            Iterator<Symbol> iterator = classSymbol.members().getElementsByName(utils.getName(name), filter).iterator();
+            if (iterator.hasNext()) {
+                methodSymbol = (Symbol.MethodSymbol) iterator.next();
+                deepMethodsCache.put(name, methodSymbol);
+                return methodSymbol;
+            }
+        }
+        return methodSymbol;
     }
 }

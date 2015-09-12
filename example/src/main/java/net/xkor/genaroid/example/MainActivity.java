@@ -60,10 +60,10 @@ public class MainActivity extends AppCompatActivity {
     @InstanceState
     private TestClass serField;
 
-    //    @InstanceState
-//    private Account accountField;
-//    @InstanceState
-//    private Account[] accountsField;
+    @InstanceState
+    private Account accountField;
+    @InstanceState
+    private Account[] accountsField;
     @InstanceState
     private ArrayList<Account> accountListField;
 
