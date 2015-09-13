@@ -13,8 +13,10 @@ android {
 }
 
 dependencies {
-    compile project(':core')
-    apt project(':compiler')
+    //noinspection GradleDynamicVersion
+    compile 'net.xkor.genaroid:core:+'
+    //noinspection GradleDynamicVersion
+    apt 'net.xkor.genaroid:compiler:+'
     compile 'com.android.support:appcompat-v7:23.0.1'
 }
 

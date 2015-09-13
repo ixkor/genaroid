@@ -1,4 +1,7 @@
 apply plugin: 'com.android.library'
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.bintray'
 
 android {
     compileSdkVersion 23
@@ -10,4 +13,62 @@ android {
 }
 
 dependencies {
+}
+
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar, javadocJar
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifact sourcesJar
+            artifact javadocJar
+
+            android.libraryVariants.all { variant ->
+                def name = variant.buildType.name
+                if (name.equals(com.android.builder.core.BuilderConstants.DEBUG)) {
+                    return; // Skip debug builds.
+                }
+                def task = project.tasks.create "jar${name.capitalize()}", Jar
+                task.dependsOn variant.javaCompile
+                task.from variant.javaCompile.destinationDir
+                artifact task
+            }
+        }
+    }
+}
+
+bintray {
+    if (project.hasProperty("bintrayApiKey")) {
+        user = bintrayUserName
+        key = bintrayApiKey
+    }
+
+    publications = ['mavenJava']
+    publish = true
+    pkg {
+        repo = 'maven'
+        name = 'genaroid:core'
+        websiteUrl = 'https://github.com/ixkor/genaroid'
+        issueTrackerUrl = ''
+        vcsUrl = 'https://github.com/ixkor/genaroid.git'
+        licenses = ['Apache-2.0']
+        publicDownloadNumbers = true
+    }
 }
