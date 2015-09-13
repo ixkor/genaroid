@@ -53,6 +53,7 @@ import javax.lang.model.type.TypeKind;
 
 public class GenaroidEnvironment {
     public static final String GENAROID_MAIN_CLASS = "net.xkor.genaroid.Genaroid";
+    public static final String DEBUG_MODE_OPTION_NAME = "genaroidDebugMode";
 
     private JavacProcessingEnvironment javacProcessingEnv;
     private RoundEnvironment roundEnvironment;
@@ -79,7 +80,7 @@ public class GenaroidEnvironment {
 
         voidType = maker.Type((Type) typeUtils.getNoType(TypeKind.VOID));
 
-        debugMode = Boolean.parseBoolean(javacProcessingEnv.getOptions().get("debugMode"));
+        debugMode = Boolean.parseBoolean(javacProcessingEnv.getOptions().get(DEBUG_MODE_OPTION_NAME));
     }
 
     public Pair<JCTree, JCCompilationUnit> getTreeAndTopLevel(Element e) {

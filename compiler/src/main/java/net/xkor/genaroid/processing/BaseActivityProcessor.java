@@ -32,7 +32,7 @@ import java.util.Set;
 import javax.tools.Diagnostic;
 
 public class BaseActivityProcessor implements SubProcessor {
-    private static final String ANNOTATION_CLASS_NAME = "net.xkor.genaroid.annotations.BaseActivity";
+    private static final String ANNOTATION_CLASS_NAME = "net.xkor.genaroid.annotations.GBaseActivity";
 
     @Override
     public void process(GenaroidEnvironment environment) {

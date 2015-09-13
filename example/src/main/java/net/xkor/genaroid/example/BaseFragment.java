@@ -7,14 +7,14 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import net.xkor.genaroid.annotations.BaseFragment;
+import net.xkor.genaroid.annotations.GBaseFragment;
 import net.xkor.genaroid.annotations.InstanceState;
 import net.xkor.genaroid.annotations.ViewById;
 
 import java.util.ArrayList;
 
-@BaseFragment
-public class TestFragment extends Fragment {
+@GBaseFragment
+public class BaseFragment extends Fragment {
     @ViewById(R.id.testId)
     private View test;
 

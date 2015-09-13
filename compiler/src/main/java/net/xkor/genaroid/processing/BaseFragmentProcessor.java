@@ -34,7 +34,7 @@ import java.util.Set;
 import javax.tools.Diagnostic;
 
 public class BaseFragmentProcessor implements SubProcessor {
-    private static final String ANNOTATION_CLASS_NAME = "net.xkor.genaroid.annotations.BaseFragment";
+    private static final String ANNOTATION_CLASS_NAME = "net.xkor.genaroid.annotations.GBaseFragment";
 
     @Override
     public void process(GenaroidEnvironment environment) {

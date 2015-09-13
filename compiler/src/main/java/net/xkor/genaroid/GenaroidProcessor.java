@@ -113,6 +113,6 @@ public class GenaroidProcessor extends AbstractProcessor {
 
     @Override
     public Set<String> getSupportedOptions() {
-        return Collections.singleton("debugMode");
+        return Collections.singleton(GenaroidEnvironment.DEBUG_MODE_OPTION_NAME);
     }
 }

@@ -21,15 +21,15 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
-import net.xkor.genaroid.annotations.BaseActivity;
+import net.xkor.genaroid.annotations.GBaseActivity;
 import net.xkor.genaroid.annotations.InstanceState;
 import net.xkor.genaroid.annotations.ViewById;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 
-@BaseActivity
-public class MainActivity extends AppCompatActivity {
+@GBaseActivity
+public class BaseActivity extends AppCompatActivity {
 
     @ViewById(R.id.testId)
     private View test;
