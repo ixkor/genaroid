@@ -111,8 +111,7 @@ public class GenaroidEnvironment {
                     break;
             }
             if (gElement != null && elementClass.isAssignableFrom(gElement.getClass())) {
-                //noinspection unchecked
-                result.add((T) gElement);
+                result.add(elementClass.cast(gElement));
             }
         }
         return result;
@@ -175,7 +174,7 @@ public class GenaroidEnvironment {
         return units.values();
     }
 
-    public Messager getMessager(){
+    public Messager getMessager() {
         return javacProcessingEnv.getMessager();
     }
 
