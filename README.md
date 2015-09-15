@@ -4,6 +4,60 @@ Fast Android development with annotation processing. Field binding for Android v
  * Eliminate `findViewById` calls by using `@ViewById` on fields.
  * Eliminate `bundle.get*` and `bundle.put*` calls by using `@InstanceState` on fields.
 
+```java
+@GBaseActivity
+public class BaseActivity extends Activity {
+    @ViewById(R.id.progress)
+    private ProgressBar progress;
+    @ViewById(R.id.content)
+    private ViewGroup content;
+
+    @InstanceState
+    private boolean loaded;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.base_activity);
+
+        // TODO Use fields...
+    }
+}
+```
+
+Usage
+--------
+
+Maven:
+```xml
+<dependency>
+  <groupId>net.xkor.genaroid</groupId>
+  <artifactId>core</artifactId>
+  <version>1.0.1</version>
+</dependency>
+<dependency>
+  <groupId>net.xkor.genaroid</groupId>
+  <artifactId>compiler</artifactId>
+  <version>1.0.1</version>
+  <optional>true</optional>
+</dependency>
+```
+or Gradle:
+```groovy
+buildscript {
+    dependencies {
+        classpath 'com.neenbedankt.gradle.plugins:android-apt:1.7'
+    }
+}
+
+apply plugin: 'com.neenbedankt.android-apt'
+
+dependencies {
+    compile 'net.xkor.genaroid:core:1.0.1'
+    apt 'net.xkor.genaroid:compiler:1.0.1'
+}
+```
+
 License
 -------
 
