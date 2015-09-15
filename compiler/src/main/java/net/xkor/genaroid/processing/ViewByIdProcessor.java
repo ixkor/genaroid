@@ -91,15 +91,15 @@ public class ViewByIdProcessor implements SubProcessor {
 
     private class ExecutorWrapper extends BaseClassWrapper {
         public ExecutorWrapper(JavacElements utils) {
-            super(utils, VIEW_BY_ID_ANNOTATION + ".Executor");
+            super(utils, "net.xkor.genaroid.internal.Bindable");
         }
 
         public Symbol.MethodSymbol getFindViewsMethod() {
-            return (Symbol.MethodSymbol) getMember("_gen_findViews");
+            return (Symbol.MethodSymbol) getMember("_gen_bind");
         }
 
         public Symbol.MethodSymbol getClearViewsMethod() {
-            return (Symbol.MethodSymbol) getMember("_gen_clearViews");
+            return (Symbol.MethodSymbol) getMember("_gen_unbind");
         }
     }
 }

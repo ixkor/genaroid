@@ -66,7 +66,7 @@ public class BaseActivityProcessor implements SubProcessor {
             onCreateMethod.prependCode(statement);
 
             GMethod onContentChangedMethod = activity.overrideMethod(activityWrapper.getOnContentChangedMethod(), true);
-            code = "Genaroid.findViews(this);";
+            code = "Genaroid.bind(this);";
             statement = environment.createParser(code).parseStatement();
             onContentChangedMethod.appendCode(statement);
         }

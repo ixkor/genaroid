@@ -106,7 +106,7 @@ public class InstanceStateProcessor implements SubProcessor {
 
     private class ExecutorWrapper extends BaseClassWrapper {
         public ExecutorWrapper(JavacElements utils) {
-            super(utils, INSTANCE_STATE_ANNOTATION + ".Executor");
+            super(utils, "net.xkor.genaroid.internal.Restorable");
         }
 
         public Symbol.MethodSymbol getSaveInstanceStateMethod() {

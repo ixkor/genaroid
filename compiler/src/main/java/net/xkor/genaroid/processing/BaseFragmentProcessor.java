@@ -75,12 +75,12 @@ public class BaseFragmentProcessor implements SubProcessor {
 
             GMethod onViewCreatedMethod = fragment.overrideMethod(fragmentWrapper.getOnViewCreatedMethod(), true);
             bundleParam = onViewCreatedMethod.getParamName(0);
-            code = String.format("Genaroid.findViews(this, %s);", bundleParam);
+            code = String.format("Genaroid.bind(this, %s);", bundleParam);
             statement = environment.createParser(code).parseStatement();
             onViewCreatedMethod.appendCode(statement);
 
             GMethod OnDestroyViewMethod = fragment.overrideMethod(fragmentWrapper.getOnDestroyViewMethod(), true);
-            code = "Genaroid.clearViews(this);";
+            code = "Genaroid.unbind(this);";
             statement = environment.createParser(code).parseStatement();
             OnDestroyViewMethod.appendCode(statement);
         }

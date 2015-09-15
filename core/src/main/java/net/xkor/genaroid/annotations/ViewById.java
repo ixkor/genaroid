@@ -16,8 +16,6 @@
 
 package net.xkor.genaroid.annotations;
 
-import android.view.View;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -61,10 +59,4 @@ public @interface ViewById {
      * @return the id of the View
      */
     int value();
-
-    interface Executor {
-        void _gen_findViews(View rootView);
-
-        void _gen_clearViews();
-    }
 }

@@ -20,37 +20,37 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.View;
 
-import net.xkor.genaroid.annotations.InstanceState;
-import net.xkor.genaroid.annotations.ViewById;
+import net.xkor.genaroid.internal.Bindable;
+import net.xkor.genaroid.internal.Restorable;
 
 public final class Genaroid {
-    public static void findViews(Object object, View rootView) {
-        if (object instanceof ViewById.Executor) {
-            ((ViewById.Executor) object)._gen_findViews(rootView);
+    public static void bind(Object object, View rootView) {
+        if (object instanceof Bindable) {
+            ((Bindable) object)._gen_bind(rootView);
         }
     }
 
-    public static void findViews(Activity activity) {
-        if (activity instanceof ViewById.Executor) {
-            ((ViewById.Executor) activity)._gen_findViews(activity.findViewById(android.R.id.content));
+    public static void bind(Activity activity) {
+        if (activity instanceof Bindable) {
+            ((Bindable) activity)._gen_bind(activity.findViewById(android.R.id.content));
         }
     }
 
-    public static void clearViews(Object object) {
-        if (object instanceof ViewById.Executor) {
-            ((ViewById.Executor) object)._gen_clearViews();
+    public static void unbind(Object object) {
+        if (object instanceof Bindable) {
+            ((Bindable) object)._gen_unbind();
         }
     }
 
     public static void saveInstanceState(Object object, Bundle outState) {
-        if (object instanceof InstanceState.Executor) {
-            ((InstanceState.Executor) object)._gen_saveInstanceState(outState);
+        if (object instanceof Restorable) {
+            ((Restorable) object)._gen_saveInstanceState(outState);
         }
     }
 
     public static void restoreInstanceState(Object object, Bundle savedState) {
-        if (object instanceof InstanceState.Executor) {
-            ((InstanceState.Executor) object)._gen_restoreInstanceState(savedState);
+        if (object instanceof Restorable) {
+            ((Restorable) object)._gen_restoreInstanceState(savedState);
         }
     }
 }
