@@ -42,9 +42,6 @@ public class ViewByIdProcessor implements SubProcessor {
     public void process(GenaroidEnvironment environment) {
         JavacElements utils = environment.getUtils();
         Symbol.ClassSymbol viewByIdType = utils.getTypeElement(VIEW_BY_ID_ANNOTATION);
-//        ActivityWrapper activityWrapper = new ActivityWrapper(utils);
-//        BaseFragmentWrapper fragmentWrapper = new FragmentWrapper(utils);
-//        BaseFragmentWrapper supportFragmentWrapper = new SupportFragmentWrapper(utils);
         ViewWrapper viewWrapper = new ViewWrapper(utils);
         ExecutorWrapper executorWrapper = new ExecutorWrapper(utils);
 
@@ -84,32 +81,6 @@ public class ViewByIdProcessor implements SubProcessor {
 
             onViewCreatedMethod.prependCode(fieldSetStatement);
             onDestroyViewMethod.prependCode(fieldUnsetStatement);
-
-//            if (field.getGClass().isSubClass(activityWrapper.getClassSymbol())) {
-//                GMethod onContentChangedMethod = field.getGClass().overrideMethod(activityWrapper.getOnContentChangedMethod(), true);
-//                String fieldSetCode = String.format("this.%s = (%s) findViewById(%s);",
-//                        field.getName(), fieldType, value);
-//                JCStatement fieldSetStatement = environment.createParser(fieldSetCode).parseStatement();
-//
-//                onContentChangedMethod.prependCode(fieldSetStatement);
-//            } else if (field.getGClass().isSubClass(supportFragmentWrapper.getClassSymbol())
-//                    || field.getGClass().isSubClass(fragmentWrapper.getClassSymbol())) {
-//                GMethod onViewCreatedMethod = field.getGClass().overrideMethod(fragmentWrapper.getOnViewCreatedMethod(), true);
-//                GMethod onDestroyViewMethod = field.getGClass().overrideMethod(fragmentWrapper.getOnDestroyViewMethod(), true);
-//                Name viewParam = onViewCreatedMethod.getParamName(0);
-//                String fieldSetCode = String.format("this.%s = (%s) %s.findViewById(%s);",
-//                        field.getName(), fieldType, viewParam, value);
-//                String fieldUnsetCode = String.format("this.%s = null;", field.getName());
-//                JCStatement fieldSetStatement = environment.createParser(fieldSetCode).parseStatement();
-//                JCStatement fieldUnsetStatement = environment.createParser(fieldUnsetCode).parseStatement();
-//
-//                onViewCreatedMethod.prependCode(fieldSetStatement);
-//                onDestroyViewMethod.prependCode(fieldUnsetStatement);
-//            } else {
-//                environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
-//                        "Annotation " + viewByIdType.getSimpleName() + " can be applied only to field of Activity or Fragment",
-//                        field.getElement());
-//            }
         }
     }
 
