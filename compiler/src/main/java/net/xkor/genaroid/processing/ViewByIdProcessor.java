@@ -24,7 +24,6 @@ import com.sun.tools.javac.tree.JCTree.JCStatement;
 import com.sun.tools.javac.util.Name;
 
 import net.xkor.genaroid.GenaroidEnvironment;
-import net.xkor.genaroid.tree.GClass;
 import net.xkor.genaroid.tree.GField;
 import net.xkor.genaroid.tree.GMethod;
 import net.xkor.genaroid.wrap.BaseClassWrapper;
@@ -36,14 +35,14 @@ import java.util.Set;
 import javax.tools.Diagnostic;
 
 public class ViewByIdProcessor implements SubProcessor {
-    private static final String VIEW_BY_ID_ANNOTATION = "net.xkor.genaroid.annotations.ViewById";
+    private static final String ANNOTATION_CLASS_NAME = "net.xkor.genaroid.annotations.ViewById";
 
     @Override
     public void process(GenaroidEnvironment environment) {
         JavacElements utils = environment.getUtils();
-        Symbol.ClassSymbol viewByIdType = utils.getTypeElement(VIEW_BY_ID_ANNOTATION);
+        Symbol.ClassSymbol viewByIdType = utils.getTypeElement(ANNOTATION_CLASS_NAME);
         ViewWrapper viewWrapper = new ViewWrapper(utils);
-        ExecutorWrapper executorWrapper = new ExecutorWrapper(utils);
+        BindableWrapper bindableWrapper = new BindableWrapper(utils);
 
         Set<GField> allFields = environment.getGElementsAnnotatedWith(viewByIdType, GField.class);
         for (GField field : allFields) {
@@ -59,19 +58,10 @@ public class ViewByIdProcessor implements SubProcessor {
                         field.getElement());
             }
 
-            boolean executorImplemented = field.getGClass().isSubClass(executorWrapper.getClassSymbol());
-            if (!executorImplemented) {
-                GClass classToExecutorImplement = field.getGClass();
-                for (GField otherField : allFields) {
-                    if (otherField.getGClass() != classToExecutorImplement && classToExecutorImplement.isSubClass(otherField.getGClass())) {
-                        classToExecutorImplement = otherField.getGClass();
-                    }
-                }
-                classToExecutorImplement.implement(executorWrapper.getClassSymbol());
-            }
+            field.getGClass().implementInBestParent(bindableWrapper.getClassSymbol(), allFields);
 
-            GMethod onViewCreatedMethod = field.getGClass().overrideMethod(executorWrapper.getFindViewsMethod(), true);
-            GMethod onDestroyViewMethod = field.getGClass().overrideMethod(executorWrapper.getClearViewsMethod(), true);
+            GMethod onViewCreatedMethod = field.getGClass().overrideMethod(bindableWrapper.getFindViewsMethod(), true);
+            GMethod onDestroyViewMethod = field.getGClass().overrideMethod(bindableWrapper.getClearViewsMethod(), true);
             Name viewParam = onViewCreatedMethod.getParamName(0);
             String fieldSetCode = String.format("this.%s = (%s) %s.findViewById(%s);",
                     field.getName(), fieldType, viewParam, value);
@@ -86,11 +76,11 @@ public class ViewByIdProcessor implements SubProcessor {
 
     @Override
     public Set<String> getSupportedAnnotationTypes() {
-        return Collections.singleton(VIEW_BY_ID_ANNOTATION);
+        return Collections.singleton(ANNOTATION_CLASS_NAME);
     }
 
-    private class ExecutorWrapper extends BaseClassWrapper {
-        public ExecutorWrapper(JavacElements utils) {
+    private class BindableWrapper extends BaseClassWrapper {
+        public BindableWrapper(JavacElements utils) {
             super(utils, "net.xkor.genaroid.internal.Bindable");
         }
 

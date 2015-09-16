@@ -38,6 +38,7 @@ import net.xkor.genaroid.GenaroidEnvironment;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Set;
 
 import javax.lang.model.element.Element;
 
@@ -107,6 +108,18 @@ public class GClass extends GElement {
 
     public boolean isSubClass(GClass base) {
         return isSubClass((Symbol.ClassSymbol) base.getElement());
+    }
+
+    public <T extends GClassMember> void implementInBestParent(Symbol.ClassSymbol interfaceType, Set<T> members) {
+        if (!isSubClass(interfaceType)) {
+            GClass classToRestorableImplement = this;
+            for (GClassMember member : members) {
+                if (member.getGClass() != classToRestorableImplement && classToRestorableImplement.isSubClass(member.getGClass())) {
+                    classToRestorableImplement = member.getGClass();
+                }
+            }
+            classToRestorableImplement.implement(interfaceType);
+        }
     }
 
     public void implement(Symbol.ClassSymbol interfaceType) {

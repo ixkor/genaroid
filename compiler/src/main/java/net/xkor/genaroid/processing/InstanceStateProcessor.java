@@ -25,7 +25,6 @@ import com.sun.tools.javac.tree.JCTree.JCStatement;
 import com.sun.tools.javac.util.Name;
 
 import net.xkor.genaroid.GenaroidEnvironment;
-import net.xkor.genaroid.tree.GClass;
 import net.xkor.genaroid.tree.GField;
 import net.xkor.genaroid.tree.GMethod;
 import net.xkor.genaroid.wrap.BaseClassWrapper;
@@ -37,15 +36,15 @@ import java.util.Set;
 import javax.tools.Diagnostic;
 
 public class InstanceStateProcessor implements SubProcessor {
-    private static final String INSTANCE_STATE_ANNOTATION = "net.xkor.genaroid.annotations.InstanceState";
+    private static final String ANNOTATION_CLASS_NAME = "net.xkor.genaroid.annotations.InstanceState";
 
     @Override
     public void process(GenaroidEnvironment environment) {
         JavacElements utils = environment.getUtils();
         Types types = environment.getTypes();
-        Symbol.ClassSymbol instanceStateType = utils.getTypeElement(INSTANCE_STATE_ANNOTATION);
+        Symbol.ClassSymbol instanceStateType = utils.getTypeElement(ANNOTATION_CLASS_NAME);
         BundleWrapper bundleWrapper = new BundleWrapper(environment);
-        ExecutorWrapper executorWrapper = new ExecutorWrapper(utils);
+        RestorableWrapper restorableWrapper = new RestorableWrapper(utils);
 
         Set<GField> allFields = environment.getGElementsAnnotatedWith(instanceStateType, GField.class);
         for (GField field : allFields) {
@@ -62,25 +61,16 @@ public class InstanceStateProcessor implements SubProcessor {
                 continue;
             }
 
-            boolean executorImplemented = field.getGClass().isSubClass(executorWrapper.getClassSymbol());
-            if (!executorImplemented) {
-                GClass classToExecutorImplement = field.getGClass();
-                for (GField otherField : allFields) {
-                    if (otherField.getGClass() != classToExecutorImplement && classToExecutorImplement.isSubClass(otherField.getGClass())) {
-                        classToExecutorImplement = otherField.getGClass();
-                    }
-                }
-                classToExecutorImplement.implement(executorWrapper.getClassSymbol());
-            }
+            field.getGClass().implementInBestParent(restorableWrapper.getClassSymbol(), allFields);
 
-            GMethod onSaveInstanceStateMethod = field.getGClass().overrideMethod(executorWrapper.getSaveInstanceStateMethod(), true);
+            GMethod onSaveInstanceStateMethod = field.getGClass().overrideMethod(restorableWrapper.getSaveInstanceStateMethod(), true);
             Name bundleParam = onSaveInstanceStateMethod.getParamName(0);
             String saveCode = String.format("%s.%s(\"%s\", this.%s);",
                     bundleParam, putMethod.getSimpleName(), fieldNameInBundle, field.getName());
             JCStatement saveStatement = environment.createParser(saveCode).parseStatement();
             onSaveInstanceStateMethod.prependCode(saveStatement);
 
-            GMethod onCreateMethod = field.getGClass().overrideMethod(executorWrapper.getRestoreInstanceStateMethod(), true);
+            GMethod onCreateMethod = field.getGClass().overrideMethod(restorableWrapper.getRestoreInstanceStateMethod(), true);
             bundleParam = onCreateMethod.getParamName(0);
             String methodName = getMethod.getSimpleName().toString();
             String template;
@@ -101,11 +91,11 @@ public class InstanceStateProcessor implements SubProcessor {
 
     @Override
     public Set<String> getSupportedAnnotationTypes() {
-        return Collections.singleton(INSTANCE_STATE_ANNOTATION);
+        return Collections.singleton(ANNOTATION_CLASS_NAME);
     }
 
-    private class ExecutorWrapper extends BaseClassWrapper {
-        public ExecutorWrapper(JavacElements utils) {
+    private class RestorableWrapper extends BaseClassWrapper {
+        public RestorableWrapper(JavacElements utils) {
             super(utils, "net.xkor.genaroid.internal.Restorable");
         }
 
