@@ -6,6 +6,7 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import net.xkor.genaroid.annotations.GBaseFragment;
 import net.xkor.genaroid.annotations.InstanceState;
@@ -19,7 +20,7 @@ public class BaseFragment extends Fragment {
     private View test;
 
     @ViewById(R.id.testId)
-    private View test2;
+    private TextView test2;
 
     @InstanceState
     private String stringField;
