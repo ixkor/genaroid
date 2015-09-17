@@ -107,5 +107,4 @@ public class InstanceStateProcessor implements SubProcessor {
             return (Symbol.MethodSymbol) getMember("_gen_restoreInstanceState");
         }
     }
-
 }

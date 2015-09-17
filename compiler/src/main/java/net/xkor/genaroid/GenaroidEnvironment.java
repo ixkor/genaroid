@@ -181,4 +181,8 @@ public class GenaroidEnvironment {
     public boolean isDebugMode() {
         return debugMode;
     }
+
+    public JavacProcessingEnvironment getJavacProcessingEnv() {
+        return javacProcessingEnv;
+    }
 }

@@ -64,6 +64,9 @@ public class BaseActivityProcessor implements SubProcessor {
             code = String.format("Genaroid.restoreInstanceState(this, %s);", bundleParam);
             statement = environment.createParser(code).parseStatement();
             onCreateMethod.prependCode(statement);
+            code = "Genaroid.readParams(this);";
+            statement = environment.createParser(code).parseStatement();
+            onCreateMethod.prependCode(statement);
 
             GMethod onContentChangedMethod = activity.overrideMethod(activityWrapper.getOnContentChangedMethod(), true);
             code = "Genaroid.bind(this);";

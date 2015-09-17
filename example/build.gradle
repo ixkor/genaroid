@@ -7,7 +7,7 @@ android {
 
     defaultConfig {
         applicationId "net.xkor.genaroid.example"
-        minSdkVersion 9
+        minSdkVersion 11
         targetSdkVersion 23
     }
 }
@@ -22,6 +22,6 @@ dependencies {
 
 apt {
     arguments {
-        genaroidDebugMode true
+        genaroidDebugMode false
     }
 }

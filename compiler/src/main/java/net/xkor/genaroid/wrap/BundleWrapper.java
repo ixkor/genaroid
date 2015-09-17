@@ -16,16 +16,21 @@
 
 package net.xkor.genaroid.wrap;
 
+import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
+import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.util.Name;
 
 import net.xkor.genaroid.GenaroidEnvironment;
+import net.xkor.genaroid.tree.GField;
 
 import java.util.HashSet;
 
 public class BundleWrapper extends BaseClassWrapper {
     private final Types types;
+    private final GenaroidEnvironment environment;
     private final HashSet<Type> classes = new HashSet<>();
     private final Type parcelableType;
     private final Type serializableType;
@@ -34,6 +39,7 @@ public class BundleWrapper extends BaseClassWrapper {
 
     public BundleWrapper(GenaroidEnvironment environment) {
         super(environment.getUtils(), "android.os.Bundle");
+        this.environment = environment;
         types = environment.getTypes();
 
         addType("java.lang.String");
@@ -104,4 +110,23 @@ public class BundleWrapper extends BaseClassWrapper {
         }
         return getMethodRecursive(prefix + mainNamePart + suffix);
     }
+
+    public JCTree.JCStatement getReadStatement(GField field, String fieldNameInBundle, Name bundleParam) {
+        Type fieldType = ((Symbol.VarSymbol) field.getElement()).asType();
+        Symbol.MethodSymbol getMethod = getMethodForType(fieldType, true);
+        String methodName = getMethod.getSimpleName().toString();
+        String template;
+        if (methodName.equals("getSerializable")) {
+            template = "this.%s = (%s) %s.%s(%s);";
+        } else if (methodName.equals("getParcelableArray")) {
+            fieldType = types.elemtype(fieldType);
+            template = "this.%s = net.xkor.genaroid.Utils.castParcelableArray(%s.class, %s.%s(%s));";
+        } else {
+            template = "this.%s = %3$s.%4$s(%5$s);";
+        }
+        String restoreCode = String.format(
+                template, field.getName(), fieldType, bundleParam, methodName, fieldNameInBundle);
+        return environment.createParser(restoreCode).parseStatement();
+    }
+
 }

@@ -5,6 +5,7 @@ apply plugin: 'com.jfrog.bintray'
 
 dependencies {
     compile files("${System.properties['java.home']}/../lib/tools.jar")
+    compile 'com.squareup:javapoet:1.2.0'
 }
 
 task javadocJar(type: Jar) {

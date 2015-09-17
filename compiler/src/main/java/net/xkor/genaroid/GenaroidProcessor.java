@@ -19,6 +19,7 @@ import com.sun.tools.javac.util.List;
 
 import net.xkor.genaroid.processing.BaseActivityProcessor;
 import net.xkor.genaroid.processing.BaseFragmentProcessor;
+import net.xkor.genaroid.processing.CreateParamProcessor;
 import net.xkor.genaroid.processing.InstanceStateProcessor;
 import net.xkor.genaroid.processing.SubProcessor;
 import net.xkor.genaroid.processing.ViewByIdProcessor;
@@ -50,6 +51,7 @@ public class GenaroidProcessor extends AbstractProcessor {
         processors.add(new InstanceStateProcessor());
         processors.add(new BaseActivityProcessor());
         processors.add(new BaseFragmentProcessor());
+        processors.add(new CreateParamProcessor());
     }
 
     @Override

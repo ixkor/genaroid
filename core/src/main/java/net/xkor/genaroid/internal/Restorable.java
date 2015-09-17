@@ -4,6 +4,8 @@ import android.os.Bundle;
 
 /**
  * For internal usage only!
+ *
+ * @hide
  */
 public interface Restorable {
     void _gen_saveInstanceState(Bundle outState);

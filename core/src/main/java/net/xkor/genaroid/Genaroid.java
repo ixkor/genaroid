@@ -17,10 +17,12 @@
 package net.xkor.genaroid;
 
 import android.app.Activity;
+import android.app.Fragment;
 import android.os.Bundle;
 import android.view.View;
 
 import net.xkor.genaroid.internal.Bindable;
+import net.xkor.genaroid.internal.Parameterizable;
 import net.xkor.genaroid.internal.Restorable;
 
 public final class Genaroid {
@@ -51,6 +53,30 @@ public final class Genaroid {
     public static void restoreInstanceState(Object object, Bundle savedState) {
         if (object instanceof Restorable) {
             ((Restorable) object)._gen_restoreInstanceState(savedState);
+        }
+    }
+
+    public static void readParams(Object object, Bundle params) {
+        if (object instanceof Parameterizable) {
+            ((Parameterizable) object)._gen_readParams(params);
+        }
+    }
+
+    public static void readParams(Activity activity) {
+        if (activity instanceof Parameterizable && activity.getIntent() != null) {
+            ((Parameterizable) activity)._gen_readParams(activity.getIntent().getExtras());
+        }
+    }
+
+    public static void readParams(Fragment fragment) {
+        if (fragment instanceof Parameterizable && fragment.getArguments() != null) {
+            ((Parameterizable) fragment)._gen_readParams(fragment.getArguments());
+        }
+    }
+
+    public static void readParams(android.support.v4.app.Fragment fragment) {
+        if (fragment instanceof Parameterizable && fragment.getArguments() != null) {
+            ((Parameterizable) fragment)._gen_readParams(fragment.getArguments());
         }
     }
 }

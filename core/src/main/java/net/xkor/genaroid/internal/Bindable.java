@@ -4,6 +4,8 @@ import android.view.View;
 
 /**
  * For internal usage only!
+ *
+ * @hide
  */
 public interface Bindable {
     void _gen_bind(View rootView);

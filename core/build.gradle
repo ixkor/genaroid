@@ -8,11 +8,12 @@ android {
     buildToolsVersion "23.0.1"
 
     defaultConfig {
-        minSdkVersion 9
+        minSdkVersion 11
     }
 }
 
 dependencies {
+    provided 'com.android.support:support-v4:23.0.1'
 }
 
 task sourcesJar(type: Jar) {
@@ -49,6 +50,7 @@ publishing {
                 def task = project.tasks.create "jar${name.capitalize()}", Jar
                 task.dependsOn variant.javaCompile
                 task.from variant.javaCompile.destinationDir
+                task.exclude '**/BuildConfig.class'
                 artifact task
             }
         }

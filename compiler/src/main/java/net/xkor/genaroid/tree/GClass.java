@@ -76,6 +76,11 @@ public class GClass extends GElement {
     }
 
     @Override
+    public Symbol.ClassSymbol getElement() {
+        return (Symbol.ClassSymbol) super.getElement();
+    }
+
+    @Override
     public GUnit getGUnit() {
         return unit;
     }
@@ -103,11 +108,11 @@ public class GClass extends GElement {
     }
 
     public boolean isSubClass(Symbol.ClassSymbol base) {
-        return ((Symbol.ClassSymbol) getElement()).isSubClass(base, getEnvironment().getTypes());
+        return getElement().isSubClass(base, getEnvironment().getTypes());
     }
 
     public boolean isSubClass(GClass base) {
-        return isSubClass((Symbol.ClassSymbol) base.getElement());
+        return isSubClass(base.getElement());
     }
 
     public <T extends GClassMember> void implementInBestParent(Symbol.ClassSymbol interfaceType, Set<T> members) {

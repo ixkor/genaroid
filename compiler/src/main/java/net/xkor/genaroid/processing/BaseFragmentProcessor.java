@@ -72,6 +72,9 @@ public class BaseFragmentProcessor implements SubProcessor {
             code = String.format("Genaroid.restoreInstanceState(this, %s);", bundleParam);
             statement = environment.createParser(code).parseStatement();
             onCreateMethod.prependCode(statement);
+            code = "Genaroid.readParams(this);";
+            statement = environment.createParser(code).parseStatement();
+            onCreateMethod.prependCode(statement);
 
             GMethod onViewCreatedMethod = fragment.overrideMethod(fragmentWrapper.getOnViewCreatedMethod(), true);
             bundleParam = onViewCreatedMethod.getParamName(0);
