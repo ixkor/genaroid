@@ -36,5 +36,5 @@ public @interface CreateParam {
      *
      * @return true if optional, else false.
      */
-    boolean isOptional() default false;
+    boolean optional() default false;
 }

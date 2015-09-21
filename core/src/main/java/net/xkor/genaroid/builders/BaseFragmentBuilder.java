@@ -14,33 +14,30 @@
  * limitations under the License.
  */
 
-package net.xkor.genaroid;
+package net.xkor.genaroid.builders;
 
 import android.os.Bundle;
 
-import java.lang.reflect.InvocationTargetException;
+public abstract class BaseFragmentBuilder<F, B extends BaseFragmentBuilder<F, B>> extends BundleBaseBuilder<B> {
+    private Class<F> fragmentClass;
 
-public abstract class BaseFragmentBuilder<T> extends BundleBuilder {
-    private Class<T> fragmentClass;
-
-    BaseFragmentBuilder(Class<T> fragmentClass) {
+    protected BaseFragmentBuilder(Class<F> fragmentClass, Class<B> builderClass) {
+        super(builderClass);
         this.fragmentClass = fragmentClass;
     }
 
-    public T instantiate() {
+    public F instantiate() {
+        F fragment = null;
         try {
-            T fragment = fragmentClass.cast(fragmentClass.getConstructor().newInstance());
-            setArgs(fragment, getBundle());
-            return fragment;
+            fragment = fragmentClass.cast(fragmentClass.newInstance());
         } catch (InstantiationException ignored) {
         } catch (IllegalAccessException ignored) {
-        } catch (InvocationTargetException ignored) {
-        } catch (NoSuchMethodException ignored) {
         }
-        return null;
+        setArgs(fragment, getBundle());
+        return fragment;
     }
 
-    protected abstract void setArgs(T fragment, Bundle bundle);
+    protected abstract void setArgs(F fragment, Bundle bundle);
 
     public Bundle getArgs() {
         return getBundle();

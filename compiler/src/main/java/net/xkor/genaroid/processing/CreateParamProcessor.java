@@ -24,7 +24,6 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
-import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Name;
@@ -40,8 +39,11 @@ import net.xkor.genaroid.wrap.FragmentWrapper;
 import net.xkor.genaroid.wrap.SupportFragmentWrapper;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -57,22 +59,28 @@ public class CreateParamProcessor implements SubProcessor {
     @Override
     public void process(GenaroidEnvironment environment) {
         JavacElements utils = environment.getUtils();
-        Types types = environment.getTypes();
         Symbol.ClassSymbol annotationClass = utils.getTypeElement(ANNOTATION_CLASS_NAME);
+        Symbol.ClassSymbol intentBuilderWrapperClass = utils.getTypeElement("net.xkor.genaroid.IntentBuilder");
+        Symbol.ClassSymbol fragmentBuilderClass = utils.getTypeElement("net.xkor.genaroid.FragmentBuilder");
+        Symbol.ClassSymbol supportFragmentBuilderClass = utils.getTypeElement("net.xkor.genaroid.SupportFragmentBuilder");
         ActivityWrapper activityWrapper = new ActivityWrapper(utils);
         BaseFragmentWrapper nativeFragmentWrapper = new FragmentWrapper(utils);
         BaseFragmentWrapper supportFragmentWrapper = new SupportFragmentWrapper(utils);
         BundleWrapper bundleWrapper = new BundleWrapper(environment);
         ParameterizableWrapper parameterizableWrapper = new ParameterizableWrapper(utils);
-        BaseClassWrapper intentBuilderWrapper = new BaseClassWrapper(utils, "net.xkor.genaroid.IntentBuilder");
-        BaseClassWrapper fragmentBuilderWrapper = new BaseClassWrapper(utils, "net.xkor.genaroid.FragmentBuilder");
-        BaseClassWrapper supportFragmentBuilderWrapper = new BaseClassWrapper(utils, "net.xkor.genaroid.SupportFragmentBuilder");
         BaseClassWrapper contextWrapper = new BaseClassWrapper(utils, "android.content.Context");
 
-        HashMap<String, TypeSpec.Builder> generatedClasses = new HashMap<>();
-        HashMap<String, MethodSpec.Builder> generatedConstructors = new HashMap<>();
+        HashMap<Symbol.ClassSymbol, BuilderClass> builders = new HashMap<>();
 
         Set<GField> allFields = environment.getGElementsAnnotatedWith(annotationClass, GField.class);
+        List<GField> sortedFields = new ArrayList<>(allFields);
+        Collections.sort(sortedFields, new Comparator<GField>() {
+            @Override
+            public int compare(GField field1, GField field2) {
+                return field1.getGClass().getHierarchyLevel() - field2.getGClass().getHierarchyLevel();
+            }
+        });
+
         for (GField field : allFields) {
             field.extractAnnotation(annotationClass);
             AnnotationMirror annotationMirror = field.findAnnotationMirror(annotationClass.asType());
@@ -83,41 +91,33 @@ public class CreateParamProcessor implements SubProcessor {
                 String argValue = arg.getValue().toString();
                 if (argName.equals("value()")) {
                     fieldNameInBundle = argValue;
-                } else if (argName.equals("isOptional()")) {
+                } else if (argName.equals("optional()")) {
                     isOptional = Boolean.parseBoolean(argValue);
                 }
             }
 
             Type fieldType = ((Symbol.VarSymbol) field.getElement()).asType();
-            String builderClassPackage = field.getGClass().getElement().packge().toString();
-            String builderClassName = field.getGClass().getElement().getSimpleName().toString() + "Builder";
-            String builderClassFullName = builderClassPackage + "." + builderClassName;
-            TypeSpec.Builder builderClassBuilder = generatedClasses.get(builderClassFullName);
-            MethodSpec.Builder builderClassConstructorBuilder = generatedConstructors.get(builderClassFullName);
-            if (builderClassBuilder == null) {
-                builderClassConstructorBuilder = MethodSpec.constructorBuilder()
-                        .addModifiers(Modifier.PUBLIC);
-                generatedConstructors.put(builderClassFullName, builderClassConstructorBuilder);
+            Symbol.ClassSymbol fieldClassSymbol = field.getGClass().getElement();
+            BuilderClass builder = builders.get(fieldClassSymbol);
+            if (builder == null) {
+                builder = new BuilderClass(fieldClassSymbol);
+                builders.put(fieldClassSymbol, builder);
 
-                builderClassBuilder = TypeSpec.classBuilder(builderClassName)
-                        .addModifiers(Modifier.PUBLIC);
-                generatedClasses.put(builderClassFullName, builderClassBuilder);
-
-                TypeName fieldClassTypeName = TypeName.get(field.getGClass().getElement().asType());
+                TypeName fieldClassTypeName = TypeName.get(fieldClassSymbol.asType());
                 if (field.getGClass().isSubClass(activityWrapper.getClassSymbol())) {
-                    builderClassBuilder.superclass(TypeName.get(intentBuilderWrapper.getClassSymbol().asType()));
-                    builderClassConstructorBuilder
+                    builder.classBuilder.superclass(TypeName.get(intentBuilderWrapperClass.asType()));
+                    builder.publicConstructorBuilder
                             .addParameter(TypeName.get(contextWrapper.getClassSymbol().asType()), "context")
                             .addStatement("super(context, $T.class)", fieldClassTypeName);
                 } else if (field.getGClass().isSubClass(supportFragmentWrapper.getClassSymbol())) {
-                    builderClassBuilder.superclass(ParameterizedTypeName.get(
-                            ClassName.get(supportFragmentBuilderWrapper.getClassSymbol()), fieldClassTypeName));
-                    builderClassConstructorBuilder
+                    builder.classBuilder.superclass(ParameterizedTypeName.get(
+                            ClassName.get(supportFragmentBuilderClass), fieldClassTypeName));
+                    builder.publicConstructorBuilder
                             .addStatement("super($T.class)", fieldClassTypeName);
                 } else if (field.getGClass().isSubClass(nativeFragmentWrapper.getClassSymbol())) {
-                    builderClassBuilder.superclass(ParameterizedTypeName.get(
-                            ClassName.get(fragmentBuilderWrapper.getClassSymbol()), fieldClassTypeName));
-                    builderClassConstructorBuilder
+                    builder.classBuilder.superclass(ParameterizedTypeName.get(
+                            ClassName.get(fragmentBuilderClass), fieldClassTypeName));
+                    builder.publicConstructorBuilder
                             .addStatement("super($T.class)", fieldClassTypeName);
                 } else {
                     environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
@@ -143,29 +143,14 @@ public class CreateParamProcessor implements SubProcessor {
             }
             String putMethodName = putMethod.getSimpleName().toString();
 
-            if (isOptional) {
-                MethodSpec putter = MethodSpec.methodBuilder(field.getName())
-                        .addModifiers(Modifier.PUBLIC)
-                        .addParameter(TypeName.get(fieldType), field.getName())
-                        .addStatement("getBundle().$L($L, $L)", putMethodName, fieldNameInBundle, field.getName())
-                        .addStatement("return this")
-                        .returns(ClassName.get(builderClassPackage, builderClassName))
-                        .build();
-
-                builderClassBuilder.addMethod(putter);
-            } else {
-                builderClassConstructorBuilder
-                        .addParameter(TypeName.get(fieldType), field.getName())
-                        .addStatement("getBundle().$L($L, $L)", putMethodName, fieldNameInBundle, field.getName());
-            }
+            builder.addParameter(field, fieldNameInBundle, fieldType, putMethodName, isOptional);
         }
 
-        for (Map.Entry<String, TypeSpec.Builder> entry : generatedClasses.entrySet()) {
-            MethodSpec constructor = generatedConstructors.get(entry.getKey()).build();
-            TypeSpec builderClass = entry.getValue().addMethod(constructor).build();
+        for (BuilderClass builder : builders.values()) {
+            MethodSpec constructor = builder.publicConstructorBuilder.build();
+            TypeSpec builderClass = builder.classBuilder.addMethod(constructor).build();
 
-            String packageName = entry.getKey().replace("." + builderClass.name, "");
-            JavaFile javaFile = JavaFile.builder(packageName, builderClass).build();
+            JavaFile javaFile = JavaFile.builder(builder.classPackage, builderClass).build();
             try {
                 javaFile.writeTo(environment.getJavacProcessingEnv().getFiler());
             } catch (IOException e) {
@@ -179,13 +164,53 @@ public class CreateParamProcessor implements SubProcessor {
         return Collections.singleton(ANNOTATION_CLASS_NAME);
     }
 
-    private class ParameterizableWrapper extends BaseClassWrapper {
+    private static class ParameterizableWrapper extends BaseClassWrapper {
         public ParameterizableWrapper(JavacElements utils) {
             super(utils, "net.xkor.genaroid.internal.Parameterizable");
         }
 
         public Symbol.MethodSymbol getReadParamsMethod() {
             return (Symbol.MethodSymbol) getMember("_gen_readParams");
+        }
+    }
+
+    private static class BuilderClass {
+        TypeSpec.Builder classBuilder;
+        MethodSpec.Builder publicConstructorBuilder;
+        MethodSpec.Builder protectedConstructorBuilder;
+
+        String classPackage;
+        String name;
+        String fullName;
+
+        public BuilderClass(Symbol.ClassSymbol classSymbol) {
+            classPackage = classSymbol.packge().toString();
+            name = classSymbol.getSimpleName().toString() + "Builder";
+            fullName = classPackage + "." + name;
+
+            classBuilder = TypeSpec.classBuilder(name).addModifiers(Modifier.PUBLIC);
+            publicConstructorBuilder = MethodSpec.constructorBuilder().addModifiers(Modifier.PUBLIC);
+            protectedConstructorBuilder = MethodSpec.constructorBuilder().addModifiers(Modifier.PROTECTED);
+        }
+
+        public void addParameter(GField field, String fieldNameInBundle, Type fieldType, String putMethodName, boolean optional) {
+            if (optional) {
+                MethodSpec putter = MethodSpec.methodBuilder(field.getName())
+                        .addModifiers(Modifier.PUBLIC)
+                        .addParameter(TypeName.get(fieldType), field.getName())
+                        .addStatement("getBundle().$L($L, $L)", putMethodName, fieldNameInBundle, field.getName())
+                        .addStatement("return this")
+                        .returns(ClassName.get(classPackage, name))
+                        .build();
+                classBuilder.addMethod(putter);
+            } else {
+                publicConstructorBuilder
+                        .addParameter(TypeName.get(fieldType), field.getName())
+                        .addStatement("getBundle().$L($L, $L)", putMethodName, fieldNameInBundle, field.getName());
+                protectedConstructorBuilder
+                        .addParameter(TypeName.get(fieldType), field.getName())
+                        .addStatement("getBundle().$L($L, $L)", putMethodName, fieldNameInBundle, field.getName());
+            }
         }
     }
 }

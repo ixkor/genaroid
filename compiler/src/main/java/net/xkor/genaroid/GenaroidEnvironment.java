@@ -65,6 +65,7 @@ public class GenaroidEnvironment {
     private Types types;
 
     private JCExpression voidType;
+    private Symbol.ClassSymbol objectClass;
 
     private HashMap<String, GUnit> units = new HashMap<>();
     private boolean debugMode;
@@ -79,6 +80,7 @@ public class GenaroidEnvironment {
         types = Types.instance(javacProcessingEnv.getContext());
 
         voidType = maker.Type((Type) typeUtils.getNoType(TypeKind.VOID));
+        objectClass = utils.getTypeElement("java.lang.Object");
 
         debugMode = Boolean.parseBoolean(javacProcessingEnv.getOptions().get(DEBUG_MODE_OPTION_NAME));
     }
@@ -184,5 +186,9 @@ public class GenaroidEnvironment {
 
     public JavacProcessingEnvironment getJavacProcessingEnv() {
         return javacProcessingEnv;
+    }
+
+    public Symbol.ClassSymbol getObjectClass() {
+        return objectClass;
     }
 }

@@ -52,6 +52,8 @@ public class GClass extends GElement {
     private JCClassDecl classDecl;
     private HashMap<String, GClassMember> members = new HashMap<>();
 
+    private int hierarchyLevel = -1;
+
     public GClass(GUnit unit, JCClassDecl classDecl, Element element) {
         super(element);
         this.unit = unit;
@@ -105,6 +107,29 @@ public class GClass extends GElement {
 
     public void putMember(GClassMember member) {
         members.put(member.getMemberSignature(), member);
+    }
+
+    public int getHierarchyLevel() {
+        if (hierarchyLevel == -1) {
+            hierarchyLevel = getSubClassLevel(getEnvironment().getObjectClass());
+        }
+        return hierarchyLevel;
+    }
+
+    public int getSubClassLevel(Symbol.ClassSymbol baseClass) {
+        if (baseClass.isInterface()) {
+            throw new IllegalArgumentException("Parameter baseClass should be class, not interface.");
+        }
+        int level = 0;
+        Symbol.ClassSymbol currentClass = getElement();
+        while (currentClass != baseClass) {
+            level++;
+            currentClass = (Symbol.ClassSymbol) currentClass.getSuperclass().asElement();
+            if (currentClass == null) {
+                return -1;
+            }
+        }
+        return level;
     }
 
     public boolean isSubClass(Symbol.ClassSymbol base) {

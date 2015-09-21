@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package net.xkor.genaroid;
+package net.xkor.genaroid.builders;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -27,120 +27,99 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 
-public class IntentBuilder extends BundleBuilder {
+public class IntentBaseBuilder<T extends IntentBaseBuilder<T>> extends BundleBaseBuilder<T> {
     private Context context;
     private Intent intent;
 
-    public IntentBuilder(Context context, Class<?> cls) {
-        intent = new Intent(context, cls);
-        this.context = context;
-    }
-
-    public IntentBuilder() {
-        intent = new Intent();
-    }
-
-    public IntentBuilder(Intent intent) {
+    protected IntentBaseBuilder(Intent intent, Class<T> builderClass) {
+        super(builderClass);
         this.intent = intent;
     }
 
-    public IntentBuilder(String action) {
-        intent = new Intent(action);
-    }
-
-    public IntentBuilder(String action, Uri uri) {
-        intent = new Intent(action, uri);
-    }
-
-    public IntentBuilder(String action, Uri uri, Context context, Class<?> cls) {
-        intent = new Intent(action, uri, context, cls);
+    public T context(Context context) {
         this.context = context;
+        return builderClass.cast(this);
     }
 
-    public IntentBuilder context(Context context) {
-        this.context = context;
-        return this;
-    }
-
-    public IntentBuilder action(String action) {
+    public T action(String action) {
         intent.setAction(action);
-        return this;
+        return builderClass.cast(this);
     }
 
-    public IntentBuilder service(Class<? extends Service> service) {
+    public T service(Class<? extends Service> service) {
         return setClass(service);
     }
 
-    public IntentBuilder activity(Class<? extends Activity> activity) {
+    public T activity(Class<? extends Activity> activity) {
         return setClass(activity);
     }
 
-    public IntentBuilder receiver(Class<? extends BroadcastReceiver> receiver) {
+    public T receiver(Class<? extends BroadcastReceiver> receiver) {
         return setClass(receiver);
     }
 
-    public IntentBuilder component(ComponentName component) {
+    public T component(ComponentName component) {
         intent.setComponent(component);
-        return this;
+        return builderClass.cast(this);
     }
 
-    public IntentBuilder className(Context context, String className) {
+    public T className(Context context, String className) {
         intent.setClassName(context, className);
         this.context = context;
-        return this;
+        return builderClass.cast(this);
     }
 
-    public IntentBuilder className(String packageName, String className) {
+    public T className(String packageName, String className) {
         intent.setClassName(packageName, className);
-        return this;
+        return builderClass.cast(this);
     }
 
-    public IntentBuilder setPackage(String pack) {
+    public T setPackage(String pack) {
         intent.setPackage(pack);
-        return this;
+        return builderClass.cast(this);
     }
 
-    public IntentBuilder flag(int flag) {
+    public T flag(int flag) {
         return this.flags(flag);
     }
 
-    public IntentBuilder flags(int... flags) {
+    public T flags(int... flags) {
         for (int flag : flags) {
             intent.addFlags(flag);
         }
-        return this;
+        return builderClass.cast(this);
     }
 
-    public IntentBuilder extras(Bundle extras) {
+    public T extras(Bundle extras) {
         getBundle().putAll(extras);
-        return this;
+        return builderClass.cast(this);
     }
 
-    public IntentBuilder extras(Intent intent) {
+    public T extras(Intent intent) {
         getBundle().putAll(intent.getExtras());
-        return this;
+        return builderClass.cast(this);
     }
 
-    public IntentBuilder data(Uri data) {
+    public T data(Uri data) {
         intent.setData(data);
-        return this;
+        return builderClass.cast(this);
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    public IntentBuilder dataNormalize(Uri data) {
+    public T dataNormalize(Uri data) {
         intent.setDataAndNormalize(data);
-        return this;
+        return builderClass.cast(this);
     }
 
-    public IntentBuilder type(String type) {
+    public T type(String type) {
         intent.setType(type);
-        return this;
+        return builderClass.cast(this);
     }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    public IntentBuilder typeNormalize(String type) {
+    public T typeNormalize(String type) {
         intent.setTypeAndNormalize(type);
-        return this;
+        return builderClass.cast(this);
     }
 
     public void start() {
@@ -164,8 +143,8 @@ public class IntentBuilder extends BundleBuilder {
         return intent;
     }
 
-    private IntentBuilder setClass(Class<?> cls) {
+    private T setClass(Class<?> cls) {
         intent.setClass(context, cls);
-        return this;
+        return builderClass.cast(this);
     }
 }
