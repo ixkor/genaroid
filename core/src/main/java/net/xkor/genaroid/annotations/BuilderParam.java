@@ -23,7 +23,7 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.FIELD)
-public @interface CreateParam {
+public @interface BuilderParam {
     /**
      * The key of the injected Fragment argument or Activity extra.
      *

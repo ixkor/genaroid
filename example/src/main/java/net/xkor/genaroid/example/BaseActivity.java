@@ -21,7 +21,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
-import net.xkor.genaroid.annotations.CreateParam;
+import net.xkor.genaroid.annotations.BuilderParam;
 import net.xkor.genaroid.annotations.GBaseActivity;
 import net.xkor.genaroid.annotations.InstanceState;
 import net.xkor.genaroid.annotations.ViewById;
@@ -66,13 +66,13 @@ public class BaseActivity extends AppCompatActivity {
     @InstanceState
     private ArrayList<String> stringArrayField;
 
-    @CreateParam(value = "testKey", isOptional = true)
+    @BuilderParam(value = "testKey", optional = true)
     private int testArg;
 
-    @CreateParam("testKey2")
+    @BuilderParam("testKey2")
     private int testArg2;
 
-    @CreateParam()
+    @BuilderParam()
     private int testArg3;
 
     @Override

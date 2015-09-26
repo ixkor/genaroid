@@ -8,7 +8,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import net.xkor.genaroid.annotations.CreateParam;
+import net.xkor.genaroid.annotations.BuilderParam;
 import net.xkor.genaroid.annotations.GBaseFragment;
 import net.xkor.genaroid.annotations.InstanceState;
 import net.xkor.genaroid.annotations.ViewById;
@@ -38,19 +38,20 @@ public class BaseFragment extends Fragment {
     @InstanceState
     private ArrayList<String> stringArrayField;
 
-    @CreateParam(value = "testKey", isOptional = true)
+    @BuilderParam(value = "testKey", optional = true)
     private int testArg;
 
-    @CreateParam("testKey2")
+    @BuilderParam("testKey2")
     private int testArg2;
 
-    @CreateParam()
+    @BuilderParam()
     private int testArg3;
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         new BaseActivityBuilder(getActivity(), 1, 1).testArg(2).start();
+        new BaseFragmentBuilder(1, 2).testArg(6).instantiate();
         return inflater.inflate(R.layout.activity_main, container, false);
     }
 }
