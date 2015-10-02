@@ -51,7 +51,7 @@ public final class Genaroid {
     }
 
     public static void restoreInstanceState(Object object, Bundle savedState) {
-        if (object instanceof Restorable) {
+        if (object instanceof Restorable && savedState != null) {
             ((Restorable) object)._gen_restoreInstanceState(savedState);
         }
     }
