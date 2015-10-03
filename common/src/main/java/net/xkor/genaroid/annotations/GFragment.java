@@ -21,42 +21,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * <p>
- * Use it on {@link android.view.View} or {@link android.view.View} subtype
- * fields in a view related class.
- * </p>
- * <p>
- * The annotation value should be one of R.id.* fields.
- * </p>
- * <blockquote>
- * <p/>
- * Example :
- * <p/>
- * <pre>
- * public class MyActivity extends GenaroidActivity {
- *
- * 	&#064;ViewById(R.id.myTextView)
- * 	TextView textView;
- *
- * 	&#064;Override
- * 	protected void onCreate(Bundle savedInstanceState) {
- * 		super.onCreate(savedInstanceState);
- * 		setContentView(R.layout.my_activity);
- * 		myEditText.setText(&quot;Date: &quot; + new Date());
- *    }
- * }
- * </pre>
- * <p/>
- * </blockquote>
- */
 @Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.FIELD)
-public @interface ViewById {
-    /**
-     * The R.id.* field which refers to the injected View.
-     *
-     * @return the id of the View
-     */
-    int value();
+@Target(ElementType.TYPE)
+public @interface GFragment {
+    @InjectGenaroidCall int injectCalls() default InjectGenaroidCall.ALL;
 }

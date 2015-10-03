@@ -1,11 +1,26 @@
+repositories {
+    Properties properties = new Properties()
+    properties.load(project.rootProject.file('local.properties').newDataInputStream())
+    def sdkDir = properties.getProperty('sdk.dir')
+
+    maven {
+        url "$sdkDir/extras/android/m2repository/"
+    }
+}
+
 apply plugin: 'java'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
 
+sourceSets {
+    main.java.srcDirs += "$projectDir/../common/src/main/java"
+}
+
 dependencies {
     compile files("${System.properties['java.home']}/../lib/tools.jar")
     compile 'com.squareup:javapoet:1.2.0'
+    compile 'com.android.support:support-annotations:23.0.1'
 }
 
 task javadocJar(type: Jar) {

@@ -16,12 +16,16 @@
 
 package net.xkor.genaroid.annotations;
 
-import java.lang.annotation.ElementType;
+import android.support.annotation.IntDef;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 
+@IntDef(flag = true, value = {InjectGenaroidCall.NONE, InjectGenaroidCall.BIND, InjectGenaroidCall.INSTANCE_STATE, InjectGenaroidCall.ALL})
 @Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.TYPE)
-public @interface GBaseFragment {
+public @interface InjectGenaroidCall {
+    int NONE = 0;
+    int BIND = 1;
+    int INSTANCE_STATE = 2;
+    int ALL = BIND | INSTANCE_STATE;
 }

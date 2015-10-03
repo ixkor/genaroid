@@ -10,10 +10,15 @@ android {
     defaultConfig {
         minSdkVersion 11
     }
+
+    sourceSets {
+        main.java.srcDirs += "$projectDir/../common/src/main/java"
+    }
 }
 
 dependencies {
     provided 'com.android.support:support-v4:23.0.1'
+    provided 'com.android.support:support-annotations:23.0.1'
 }
 
 task sourcesJar(type: Jar) {

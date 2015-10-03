@@ -19,6 +19,8 @@ package net.xkor.genaroid;
 import android.app.Activity;
 import android.app.Fragment;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.view.View;
 
 import net.xkor.genaroid.internal.Bindable;
@@ -26,55 +28,55 @@ import net.xkor.genaroid.internal.Parameterizable;
 import net.xkor.genaroid.internal.Restorable;
 
 public final class Genaroid {
-    public static void bind(Object object, View rootView) {
+    public static void bind(@NonNull Object object, @NonNull View rootView) {
         if (object instanceof Bindable) {
             ((Bindable) object)._gen_bind(rootView);
         }
     }
 
-    public static void bind(Activity activity) {
+    public static void bind(@NonNull Activity activity) {
         if (activity instanceof Bindable) {
             ((Bindable) activity)._gen_bind(activity.findViewById(android.R.id.content));
         }
     }
 
-    public static void unbind(Object object) {
+    public static void unbind(@NonNull Object object) {
         if (object instanceof Bindable) {
             ((Bindable) object)._gen_unbind();
         }
     }
 
-    public static void saveInstanceState(Object object, Bundle outState) {
+    public static void saveInstanceState(@NonNull Object object, @NonNull Bundle outState) {
         if (object instanceof Restorable) {
             ((Restorable) object)._gen_saveInstanceState(outState);
         }
     }
 
-    public static void restoreInstanceState(Object object, Bundle savedState) {
+    public static void restoreInstanceState(@NonNull Object object, @Nullable Bundle savedState) {
         if (object instanceof Restorable && savedState != null) {
             ((Restorable) object)._gen_restoreInstanceState(savedState);
         }
     }
 
-    public static void readParams(Object object, Bundle params) {
+    public static void readParams(@NonNull Object object, Bundle params) {
         if (object instanceof Parameterizable) {
             ((Parameterizable) object)._gen_readParams(params);
         }
     }
 
-    public static void readParams(Activity activity) {
+    public static void readParams(@NonNull Activity activity) {
         if (activity instanceof Parameterizable && activity.getIntent() != null) {
             ((Parameterizable) activity)._gen_readParams(activity.getIntent().getExtras());
         }
     }
 
-    public static void readParams(Fragment fragment) {
+    public static void readParams(@NonNull Fragment fragment) {
         if (fragment instanceof Parameterizable && fragment.getArguments() != null) {
             ((Parameterizable) fragment)._gen_readParams(fragment.getArguments());
         }
     }
 
-    public static void readParams(android.support.v4.app.Fragment fragment) {
+    public static void readParams(@NonNull android.support.v4.app.Fragment fragment) {
         if (fragment instanceof Parameterizable && fragment.getArguments() != null) {
             ((Parameterizable) fragment)._gen_readParams(fragment.getArguments());
         }

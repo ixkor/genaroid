@@ -23,5 +23,6 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)
-public @interface GBaseActivity {
+public @interface GActivity {
+    @InjectGenaroidCall int injectCalls() default InjectGenaroidCall.ALL;
 }
