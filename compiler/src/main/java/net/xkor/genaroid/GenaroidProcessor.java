@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package net.xkor.genaroid;
 
 import com.sun.tools.javac.util.List;
 
-import net.xkor.genaroid.processing.BaseActivityProcessor;
-import net.xkor.genaroid.processing.BaseFragmentProcessor;
 import net.xkor.genaroid.processing.BuildersProcessor;
+import net.xkor.genaroid.processing.GActivityProcessor;
+import net.xkor.genaroid.processing.GFragmentProcessor;
 import net.xkor.genaroid.processing.InstanceStateProcessor;
 import net.xkor.genaroid.processing.SubProcessor;
 import net.xkor.genaroid.processing.ViewByIdProcessor;
@@ -47,10 +48,10 @@ public class GenaroidProcessor extends AbstractProcessor {
 
     public GenaroidProcessor() {
         processors.clear();
+        processors.add(new GActivityProcessor());
+        processors.add(new GFragmentProcessor());
         processors.add(new ViewByIdProcessor());
         processors.add(new InstanceStateProcessor());
-        processors.add(new BaseActivityProcessor());
-        processors.add(new BaseFragmentProcessor());
         processors.add(new BuildersProcessor());
     }
 

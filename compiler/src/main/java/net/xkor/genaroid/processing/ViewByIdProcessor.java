@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package net.xkor.genaroid.processing;
 
 import com.sun.tools.javac.code.Symbol;
@@ -20,12 +21,10 @@ import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCAssign;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
-import com.sun.tools.javac.tree.JCTree.JCStatement;
-import com.sun.tools.javac.util.Name;
 
 import net.xkor.genaroid.GenaroidEnvironment;
+import net.xkor.genaroid.annotations.ViewById;
 import net.xkor.genaroid.tree.GField;
-import net.xkor.genaroid.tree.GMethod;
 import net.xkor.genaroid.wrap.BaseClassWrapper;
 import net.xkor.genaroid.wrap.ViewWrapper;
 
@@ -35,7 +34,7 @@ import java.util.Set;
 import javax.tools.Diagnostic;
 
 public class ViewByIdProcessor implements SubProcessor {
-    private static final String ANNOTATION_CLASS_NAME = "net.xkor.genaroid.annotations.ViewById";
+    private static final String ANNOTATION_CLASS_NAME = ViewById.class.getCanonicalName();
 
     @Override
     public void process(GenaroidEnvironment environment) {
@@ -44,7 +43,7 @@ public class ViewByIdProcessor implements SubProcessor {
         ViewWrapper viewWrapper = new ViewWrapper(utils);
         BindableWrapper bindableWrapper = new BindableWrapper(utils);
 
-        Set<GField> allFields = environment.getGElementsAnnotatedWith(viewByIdType, GField.class);
+        Set<GField> allFields = environment.getGElementsAnnotatedWith(ViewById.class, GField.class);
         for (GField field : allFields) {
             JCTree.JCAnnotation annotation = field.extractAnnotation(viewByIdType);
             JCTree fieldType = field.getTree().getType();
@@ -60,17 +59,10 @@ public class ViewByIdProcessor implements SubProcessor {
 
             field.getGClass().implementInBestParent(bindableWrapper.getClassSymbol(), allFields);
 
-            GMethod onViewCreatedMethod = field.getGClass().overrideMethod(bindableWrapper.getFindViewsMethod(), true);
-            GMethod onDestroyViewMethod = field.getGClass().overrideMethod(bindableWrapper.getClearViewsMethod(), true);
-            Name viewParam = onViewCreatedMethod.getParamName(0);
-            String fieldSetCode = String.format("this.%s = (%s) %s.findViewById(%s);",
-                    field.getName(), fieldType, viewParam, value);
-            String fieldUnsetCode = String.format("this.%s = null;", field.getName());
-            JCStatement fieldSetStatement = environment.createParser(fieldSetCode).parseStatement();
-            JCStatement fieldUnsetStatement = environment.createParser(fieldUnsetCode).parseStatement();
-
-            onViewCreatedMethod.prependCode(fieldSetStatement);
-            onDestroyViewMethod.prependCode(fieldUnsetStatement);
+            field.getGClass().overrideMethod(bindableWrapper.getFindViewsMethod(), true)
+                    .prependCode("this.%s = (%s) $p0.findViewById(%s);", field.getName(), fieldType, value);
+            field.getGClass().overrideMethod(bindableWrapper.getClearViewsMethod(), true)
+                    .prependCode("this.%s = null;", field.getName());
         }
     }
 

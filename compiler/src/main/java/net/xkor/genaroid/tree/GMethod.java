@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package net.xkor.genaroid.tree;
 
 import com.sun.tools.javac.tree.JCTree.JCMethodDecl;
@@ -65,8 +66,44 @@ public class GMethod extends GClassMember {
         methodDecl.getBody().stats = methodDecl.getBody().stats.append(code);
     }
 
+    public void appendCodeAfterSuper(JCStatement code) {
+        String superCall = "super." + getName() + "(";
+        List<JCStatement> newBody = List.nil();
+        boolean added = false;
+        for (JCStatement statement : methodDecl.getBody().stats) {
+            newBody = newBody.append(statement);
+            if (!added && statement.toString().startsWith(superCall)) {
+                newBody = newBody.append(code);
+                added = true;
+            }
+        }
+        methodDecl.getBody().stats = newBody;
+    }
+
+    public GMethod appendCodeAfterSuper(String code, Object... args) {
+        appendCodeAfterSuper(codeToStatement(code, args));
+        return this;
+    }
+
+    public GMethod appendCode(String code, Object... args) {
+        appendCode(codeToStatement(code, args));
+        return this;
+    }
+
+    private JCStatement codeToStatement(String code, Object[] args) {
+        for (int i = 0; i < methodDecl.getParameters().size(); i++) {
+            code = code.replace("$p" + i, getParamName(i));
+        }
+        return getEnvironment().createParser(String.format(code, args)).parseStatement();
+    }
+
     public void prependCode(JCStatement code) {
         methodDecl.getBody().stats = methodDecl.getBody().stats.prepend(code);
+    }
+
+    public GMethod prependCode(String code, Object... args) {
+        prependCode(codeToStatement(code, args));
+        return this;
     }
 
     public List<JCStatement> getBody() {

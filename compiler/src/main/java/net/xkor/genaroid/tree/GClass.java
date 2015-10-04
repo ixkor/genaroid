@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package net.xkor.genaroid.tree;
 
 import com.sun.tools.javac.code.Flags;
@@ -36,7 +37,9 @@ import com.sun.tools.javac.util.Name;
 
 import net.xkor.genaroid.GenaroidEnvironment;
 
+import java.lang.annotation.Annotation;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Set;
 
@@ -53,6 +56,13 @@ public class GClass extends GElement {
     private HashMap<String, GClassMember> members = new HashMap<>();
 
     private int hierarchyLevel = -1;
+    public static final Comparator<GClass> HIERARCHY_LEVEL_COMPARATOR = new Comparator<GClass>() {
+        @Override
+        public int compare(GClass class1, GClass class2) {
+            return class1.getHierarchyLevel() - class2.getHierarchyLevel();
+        }
+    };
+    private HashMap<Class<?>, Boolean> baseClassForAnnotion = new HashMap<>();
 
     public GClass(GUnit unit, JCClassDecl classDecl, Element element) {
         super(element);
@@ -171,16 +181,6 @@ public class GClass extends GElement {
         } while (interfaceType != null);
     }
 
-    public boolean isImplementedByProcessor(Symbol.ClassSymbol interfaceType) {
-        String interfaceName = interfaceType.getQualifiedName().toString();
-        for (JCExpression expression : classDecl.implementing) {
-            if (expression.toString().equals(interfaceName)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
 //    public GMethod createOrGetMethod(long modifiers, String name, String type, List<JCVariableDecl> params) {
 //        TreeMaker maker = getEnvironment().getMaker();
 //        JavacElements utils = getEnvironment().getUtils();
@@ -208,6 +208,16 @@ public class GClass extends GElement {
 //
 //        return method;
 //    }
+
+    public boolean isImplementedByProcessor(Symbol.ClassSymbol interfaceType) {
+        String interfaceName = interfaceType.getQualifiedName().toString();
+        for (JCExpression expression : classDecl.implementing) {
+            if (expression.toString().equals(interfaceName)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public GField createOrGetField(long modifiers, String name, String type, JCTree.JCExpression init) {
         GField field = (GField) getMember(name);
@@ -302,5 +312,30 @@ public class GClass extends GElement {
 
     public JCNewClass createNewInstance(List<JCExpression> params) {
         return createNewInstance(getName(), params);
+    }
+
+    @Override
+    public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
+        return JavacElements.getAnnotation(getElement(), annotationClass);
+    }
+
+    public <T extends Annotation> boolean isBaseWithAnnotation(Class<T> annotationClass) {
+        Boolean result = baseClassForAnnotion.get(annotationClass);
+        if (result != null) {
+            return result;
+        }
+
+        result = true;
+        Symbol.ClassSymbol currentClass = getElement();
+        while (currentClass != null) {
+            currentClass = (Symbol.ClassSymbol) currentClass.getSuperclass().asElement();
+            if (currentClass != null && JavacElements.getAnnotation(currentClass, annotationClass) != null) {
+                result = false;
+                break;
+            }
+        }
+
+        baseClassForAnnotion.put(annotationClass, result);
+        return result;
     }
 }

@@ -32,6 +32,7 @@ import com.sun.tools.javac.util.Name;
 
 import net.xkor.genaroid.GenaroidEnvironment;
 import net.xkor.genaroid.Utils;
+import net.xkor.genaroid.annotations.BuilderParam;
 import net.xkor.genaroid.tree.GClass;
 import net.xkor.genaroid.tree.GField;
 import net.xkor.genaroid.tree.GMethod;
@@ -57,7 +58,7 @@ import javax.lang.model.element.Modifier;
 import javax.tools.Diagnostic;
 
 public class BuildersProcessor implements SubProcessor {
-    private static final String ANNOTATION_CLASS_NAME = "net.xkor.genaroid.annotations.BuilderParam";
+    private static final String ANNOTATION_CLASS_NAME = BuilderParam.class.getCanonicalName();
     private static final ClassName CLASS_TYPE_NAME = ClassName.get("java.lang", "Class");
     private static final ClassName CONTEXT_TYPE_NAME = ClassName.get("android.content", "Context");
     private static final ClassName INTENT_TYPE_NAME = ClassName.get("android.content", "Intent");
@@ -86,7 +87,27 @@ public class BuildersProcessor implements SubProcessor {
 
         HashMap<Symbol.ClassSymbol, BuilderClass> builders = new HashMap<>();
 
-        Set<GField> allFields = environment.getGElementsAnnotatedWith(annotationClass, GField.class);
+        ArrayList<GClass> classesForBuilders = new ArrayList<>();
+        if (environment.getActivities() != null) {
+            classesForBuilders.addAll(environment.getActivities());
+        }
+        if (environment.getFragments() != null) {
+            classesForBuilders.addAll(environment.getFragments());
+        }
+        for (GClass gClass : classesForBuilders) {
+            Symbol.ClassSymbol currentClass = gClass.getElement();
+            BuilderClass superBuilder = null;
+            while (currentClass != environment.getObjectClass() && superBuilder == null) {
+                currentClass = (Symbol.ClassSymbol) currentClass.getSuperclass().asElement();
+                superBuilder = builders.get(currentClass);
+            }
+
+            BuilderClass builder = new BuilderClass(gClass.getElement(), superBuilder);
+            builder.init(gClass);
+            builders.put(gClass.getElement(), builder);
+        }
+
+        Set<GField> allFields = environment.getGElementsAnnotatedWith(BuilderParam.class, GField.class);
         List<GField> sortedFields = new ArrayList<>(allFields);
         Collections.sort(sortedFields, new Comparator<GField>() {
             @Override
@@ -114,22 +135,10 @@ public class BuildersProcessor implements SubProcessor {
             Symbol.ClassSymbol fieldClassSymbol = field.getGClass().getElement();
             BuilderClass builder = builders.get(fieldClassSymbol);
             if (builder == null) {
-                Symbol.ClassSymbol currentClass = fieldClassSymbol;
-                BuilderClass superBuilder = null;
-                while (currentClass != environment.getObjectClass() && superBuilder == null) {
-                    currentClass = (Symbol.ClassSymbol) currentClass.getSuperclass().asElement();
-                    superBuilder = builders.get(fieldClassSymbol);
-                }
-
-                builder = new BuilderClass(fieldClassSymbol, superBuilder);
-                if (!builder.init(field.getGClass())) {
-                    environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                            "Annotation " + annotationClass.getSimpleName() + " can be applied only to subclasses of Fragment or Activity",
-                            field.getElement());
-                    continue;
-                }
-
-                builders.put(fieldClassSymbol, builder);
+                environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                        "Annotation " + annotationClass.getSimpleName() + " can be applied only to fields of classes annotated by GFragment or GActivity",
+                        field.getElement());
+                continue;
             }
 
             field.getGClass().implementInBestParent(parameterizableWrapper.getClassSymbol(), allFields);
@@ -174,10 +183,14 @@ public class BuildersProcessor implements SubProcessor {
     private static class MethodParameter {
         private final TypeName typeName;
         private final String name;
+        private final String putMethodName;
+        private final String fieldNameInBundle;
 
-        public MethodParameter(TypeName typeName, String name) {
+        public MethodParameter(TypeName typeName, String name, String putMethodName, String fieldNameInBundle) {
             this.typeName = typeName;
             this.name = name;
+            this.fieldNameInBundle = fieldNameInBundle;
+            this.putMethodName = putMethodName;
         }
     }
 
@@ -206,7 +219,7 @@ public class BuildersProcessor implements SubProcessor {
             classBaseBuilder = TypeSpec.classBuilder(baseName).addModifiers(Modifier.PUBLIC);
             classBuilder = TypeSpec.classBuilder(name).addModifiers(Modifier.PUBLIC);
             publicConstructorBuilder = MethodSpec.constructorBuilder().addModifiers(Modifier.PUBLIC).addCode("$[");
-            protectedConstructorBuilder = MethodSpec.constructorBuilder().addModifiers(Modifier.PROTECTED);
+            protectedConstructorBuilder = MethodSpec.constructorBuilder().addModifiers(Modifier.PROTECTED).addCode("$[");
         }
 
         public boolean init(GClass fieldGClass) {
@@ -241,16 +254,8 @@ public class BuildersProcessor implements SubProcessor {
             publicConstructorBuilder
                     .addParameter(CONTEXT_TYPE_NAME, "context");
 
-            String superParams = "";
-            if (superBuilder != null) {
-                for (MethodParameter parameter : superBuilder.constructorParams) {
-                    protectedConstructorBuilder.addParameter(parameter.typeName, parameter.name);
-                    publicConstructorBuilder.addParameter(parameter.typeName, parameter.name);
-                    superParams += ", " + parameter.name;
-                }
-            }
-            protectedConstructorBuilder.addStatement("super(intent, builderClass" + superParams + ")");
-            publicConstructorBuilder.addCode("super(new $T(context, $T.class), $T.class" + superParams, INTENT_TYPE_NAME, ClassName.get(activityClassSymbol), ClassName.get(packageName, name));
+            protectedConstructorBuilder.addCode("super(intent, builderClass");
+            publicConstructorBuilder.addCode("super(new $T(context, $T.class), $T.class", INTENT_TYPE_NAME, ClassName.get(activityClassSymbol), ClassName.get(packageName, name));
         }
 
         public void initFragmentBuilder(Symbol.ClassSymbol baseBuilderWrapperClass, Symbol.ClassSymbol fragmentClassSymbol) {
@@ -271,16 +276,8 @@ public class BuildersProcessor implements SubProcessor {
                     .addParameter(CLASS_F_TYPE_NAME, "fragmentClass")
                     .addParameter(CLASS_T_TYPE_NAME, "builderClass");
 
-            String superParams = "";
-            if (superBuilder != null) {
-                for (MethodParameter parameter : superBuilder.constructorParams) {
-                    protectedConstructorBuilder.addParameter(parameter.typeName, parameter.name);
-                    publicConstructorBuilder.addParameter(parameter.typeName, parameter.name);
-                    superParams += ", " + parameter.name;
-                }
-            }
-            protectedConstructorBuilder.addStatement("super(fragmentClass, builderClass" + superParams + ")");
-            publicConstructorBuilder.addCode("super($T.class, $T.class" + superParams, ClassName.get(fragmentClassSymbol), ClassName.get(packageName, name));
+            protectedConstructorBuilder.addCode("super(fragmentClass, builderClass");
+            publicConstructorBuilder.addCode("super($T.class, $T.class", ClassName.get(fragmentClassSymbol), ClassName.get(packageName, name));
         }
 
         public void addParameter(GField field, String fieldNameInBundle, Type fieldType, String putMethodName, boolean optional) {
@@ -294,18 +291,34 @@ public class BuildersProcessor implements SubProcessor {
                         .build();
                 classBaseBuilder.addMethod(putter);
             } else {
-                constructorParams.add(new MethodParameter(TypeName.get(fieldType), field.getName()));
-                publicConstructorBuilder
-                        .addParameter(TypeName.get(fieldType), field.getName())
-                        .addCode(", " + field.getName());
-                protectedConstructorBuilder
-                        .addParameter(TypeName.get(fieldType), field.getName())
-                        .addStatement("getBundle().$L($L, $L)", putMethodName, fieldNameInBundle, field.getName());
+                constructorParams.add(new MethodParameter(TypeName.get(fieldType), field.getName(), putMethodName, fieldNameInBundle));
             }
         }
 
         public void writeToFile(GenaroidEnvironment environment) {
-            writeToFile(environment, classBuilder.addMethod(publicConstructorBuilder.addCode(");\n$]").build()).build());
+            if (superBuilder != null) {
+                for (MethodParameter parameter : superBuilder.constructorParams) {
+                    protectedConstructorBuilder
+                            .addParameter(parameter.typeName, parameter.name)
+                            .addCode(", " + parameter.name);
+                    publicConstructorBuilder
+                            .addParameter(parameter.typeName, parameter.name)
+                            .addCode(", " + parameter.name);
+                }
+            }
+            protectedConstructorBuilder.addCode(");\n$]");
+
+            for (MethodParameter parameter : constructorParams) {
+                protectedConstructorBuilder
+                        .addParameter(parameter.typeName, parameter.name)
+                        .addStatement("getBundle().$L($L, $L)", parameter.putMethodName, parameter.fieldNameInBundle, parameter.name);
+                publicConstructorBuilder
+                        .addParameter(parameter.typeName, parameter.name)
+                        .addCode(", " + parameter.name);
+            }
+            publicConstructorBuilder.addCode(");\n$]");
+
+            writeToFile(environment, classBuilder.addMethod(publicConstructorBuilder.build()).build());
             writeToFile(environment, classBaseBuilder.addMethod(protectedConstructorBuilder.build()).build());
         }
 

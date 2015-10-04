@@ -21,10 +21,9 @@ import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
-import com.sun.tools.javac.tree.JCTree.JCStatement;
-import com.sun.tools.javac.util.Name;
 
 import net.xkor.genaroid.GenaroidEnvironment;
+import net.xkor.genaroid.annotations.InstanceState;
 import net.xkor.genaroid.tree.GField;
 import net.xkor.genaroid.tree.GMethod;
 import net.xkor.genaroid.wrap.BaseClassWrapper;
@@ -36,7 +35,7 @@ import java.util.Set;
 import javax.tools.Diagnostic;
 
 public class InstanceStateProcessor implements SubProcessor {
-    private static final String ANNOTATION_CLASS_NAME = "net.xkor.genaroid.annotations.InstanceState";
+    private static final String ANNOTATION_CLASS_NAME = InstanceState.class.getCanonicalName();
 
     @Override
     public void process(GenaroidEnvironment environment) {
@@ -46,7 +45,7 @@ public class InstanceStateProcessor implements SubProcessor {
         BundleWrapper bundleWrapper = new BundleWrapper(environment);
         RestorableWrapper restorableWrapper = new RestorableWrapper(utils);
 
-        Set<GField> allFields = environment.getGElementsAnnotatedWith(instanceStateType, GField.class);
+        Set<GField> allFields = environment.getGElementsAnnotatedWith(InstanceState.class, GField.class);
         for (GField field : allFields) {
             JCTree.JCAnnotation annotation = field.extractAnnotation(instanceStateType);
             Type fieldType = ((Symbol.VarSymbol) field.getElement()).asType();
@@ -64,28 +63,21 @@ public class InstanceStateProcessor implements SubProcessor {
             field.getGClass().implementInBestParent(restorableWrapper.getClassSymbol(), allFields);
 
             GMethod onSaveInstanceStateMethod = field.getGClass().overrideMethod(restorableWrapper.getSaveInstanceStateMethod(), true);
-            Name bundleParam = onSaveInstanceStateMethod.getParamName(0);
-            String saveCode = String.format("%s.%s(\"%s\", this.%s);",
-                    bundleParam, putMethod.getSimpleName(), fieldNameInBundle, field.getName());
-            JCStatement saveStatement = environment.createParser(saveCode).parseStatement();
-            onSaveInstanceStateMethod.prependCode(saveStatement);
+            onSaveInstanceStateMethod.prependCode("$p0.%s(\"%s\", this.%s);",
+                    putMethod.getSimpleName(), fieldNameInBundle, field.getName());
 
             GMethod onCreateMethod = field.getGClass().overrideMethod(restorableWrapper.getRestoreInstanceStateMethod(), true);
-            bundleParam = onCreateMethod.getParamName(0);
             String methodName = getMethod.getSimpleName().toString();
             String template;
             if (methodName.equals("getSerializable")) {
-                template = "this.%s = (%s) %s.%s(\"%s\");";
+                template = "this.%s = (%s) $p0.%s(\"%s\");";
             } else if (methodName.equals("getParcelableArray")) {
                 fieldType = types.elemtype(fieldType);
-                template = "this.%s = net.xkor.genaroid.Utils.castParcelableArray(%s.class, %s.%s(\"%s\"));";
+                template = "this.%s = net.xkor.genaroid.Utils.castParcelableArray(%s.class, $p0.%s(\"%s\"));";
             } else {
-                template = "this.%s = %3$s.%4$s(\"%5$s\");";
+                template = "this.%s = $p0.%3$s(\"%4$s\");";
             }
-            String restoreCode = String.format(
-                    template, field.getName(), fieldType, bundleParam, methodName, fieldNameInBundle);
-            JCStatement restoreStatement = environment.createParser(restoreCode).parseStatement();
-            onCreateMethod.prependCode(restoreStatement);
+            onCreateMethod.prependCode(template, field.getName(), fieldType, methodName, fieldNameInBundle);
         }
     }
 

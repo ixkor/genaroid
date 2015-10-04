@@ -35,9 +35,7 @@ public final class Genaroid {
     }
 
     public static void bind(@NonNull Activity activity) {
-        if (activity instanceof Bindable) {
-            ((Bindable) activity)._gen_bind(activity.findViewById(android.R.id.content));
-        }
+        bind(activity, activity.findViewById(android.R.id.content));
     }
 
     public static void unbind(@NonNull Object object) {
@@ -58,27 +56,23 @@ public final class Genaroid {
         }
     }
 
-    public static void readParams(@NonNull Object object, Bundle params) {
-        if (object instanceof Parameterizable) {
+    public static void readParams(@NonNull Object object, @Nullable Bundle params) {
+        if (object instanceof Parameterizable && params != null) {
             ((Parameterizable) object)._gen_readParams(params);
         }
     }
 
     public static void readParams(@NonNull Activity activity) {
-        if (activity instanceof Parameterizable && activity.getIntent() != null) {
-            ((Parameterizable) activity)._gen_readParams(activity.getIntent().getExtras());
+        if (activity.getIntent() != null) {
+            readParams(activity, activity.getIntent().getExtras());
         }
     }
 
     public static void readParams(@NonNull Fragment fragment) {
-        if (fragment instanceof Parameterizable && fragment.getArguments() != null) {
-            ((Parameterizable) fragment)._gen_readParams(fragment.getArguments());
-        }
+        readParams(fragment, fragment.getArguments());
     }
 
     public static void readParams(@NonNull android.support.v4.app.Fragment fragment) {
-        if (fragment instanceof Parameterizable && fragment.getArguments() != null) {
-            ((Parameterizable) fragment)._gen_readParams(fragment.getArguments());
-        }
+        readParams(fragment, fragment.getArguments());
     }
 }

@@ -22,21 +22,21 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
 import net.xkor.genaroid.annotations.BuilderParam;
-import net.xkor.genaroid.annotations.GBaseActivity;
+import net.xkor.genaroid.annotations.GActivity;
 import net.xkor.genaroid.annotations.InstanceState;
 import net.xkor.genaroid.annotations.ViewById;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 
-@GBaseActivity
+@GActivity(R.layout.activity_main)
 public class BaseActivity extends AppCompatActivity {
 
     @ViewById(R.id.testId)
     private View test;
 
     @ViewById(R.id.testId)
-    private View test2;
+    private View test5;
 
     @InstanceState
     private int intField;
@@ -73,13 +73,7 @@ public class BaseActivity extends AppCompatActivity {
     private int testArg2;
 
     @BuilderParam()
-    private int testArg3;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-    }
+    private int testArg4;
 
     private static class TestClass implements Serializable {
     }

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package net.xkor.genaroid.tree;
 
 import com.sun.tools.javac.code.Symbol;
@@ -22,6 +23,8 @@ import com.sun.tools.javac.tree.JCTree.JCAnnotation;
 import com.sun.tools.javac.tree.JCTree.JCModifiers;
 
 import net.xkor.genaroid.GenaroidEnvironment;
+
+import java.lang.annotation.Annotation;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
@@ -89,5 +92,9 @@ public abstract class GElement {
             }
         }
         return null;
+    }
+
+    public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
+        return getElement().getAnnotation(annotationClass);
     }
 }
