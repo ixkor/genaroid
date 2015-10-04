@@ -3,24 +3,39 @@ Genaroid
 Fast Android development with annotation processing. Field binding for Android views and easy field state restoring which uses annotation processing to generate boilerplate code for you.
  * Eliminate `findViewById` calls by using `@ViewById` on fields.
  * Eliminate `bundle.get*` and `bundle.put*` calls by using `@InstanceState` on fields.
+ * Eliminate `setContentView` and `onCreateView` calls and create builders for Fragments and Activities by using `@GActivity` and `@GFragment` on classes and `@BuilderParam` on field that should be set by builder.
 
 ```java
-@GBaseActivity
-public class BaseActivity extends Activity {
-    @ViewById(R.id.progress)
-    private ProgressBar progress;
-    @ViewById(R.id.content)
-    private ViewGroup content;
+@GFragment(R.layout.login_fragment)
+public class LoginFragment extends BaseFragment {
+    @BuilderParam()
+    private String lastLogin;
+
+    @ViewById(R.id.login)
+    private EditText loginField;
+    @ViewById(R.id.password)
+    private EditText passwordField;
+    @ViewById(R.id.sign_in)
+    private Button signInButton;
 
     @InstanceState
-    private boolean loaded;
+    private String authError;
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.base_activity);
-
-        // TODO Use fields...
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        loginField.setText(lastLogin);
+        loginField.setError(authError);
+        signInButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (TextUtils.isEmpty(loginField.getText())) {
+                    authError = "Login is empty";
+                    loginField.setError(authError);
+                }
+                // do auth...
+            }
+        });
     }
 }
 ```
@@ -28,21 +43,7 @@ public class BaseActivity extends Activity {
 Usage
 --------
 
-Maven:
-```xml
-<dependency>
-  <groupId>net.xkor.genaroid</groupId>
-  <artifactId>core</artifactId>
-  <version>1.0.1</version>
-</dependency>
-<dependency>
-  <groupId>net.xkor.genaroid</groupId>
-  <artifactId>compiler</artifactId>
-  <version>1.0.1</version>
-  <optional>true</optional>
-</dependency>
-```
-or Gradle:
+Gradle:
 ```groovy
 buildscript {
     dependencies {
@@ -53,8 +54,8 @@ buildscript {
 apply plugin: 'com.neenbedankt.android-apt'
 
 dependencies {
-    compile 'net.xkor.genaroid:core:1.0.1'
-    apt 'net.xkor.genaroid:compiler:1.0.1'
+    compile 'net.xkor.genaroid:core:1.1.0'
+    apt 'net.xkor.genaroid:compiler:1.1.0'
 }
 ```
 
