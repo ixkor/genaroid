@@ -76,16 +76,14 @@ public class GenaroidProcessor extends AbstractProcessor {
 
             for (GUnit unit : genaroidEnvironment.getUnits()) {
                 try {
-                    JavaFileObject source = processingEnv.getFiler().createSourceFile(
-                            unit.getCompilationUnit().getPackageName() + "." + unit.getName());
                     if (genaroidEnvironment.isDebugMode()) {
+                        JavaFileObject source = processingEnv.getFiler().createSourceFile(
+                                unit.getCompilationUnit().getPackageName() + "." + unit.getName());
                         Writer writer = source.openWriter();
                         writer.write(unit.getCompilationUnit().toString());
                         writer.flush();
                         writer.close();
                         unit.getCompilationUnit().defs = List.nil();
-                    } else {
-                        source.delete();
                     }
                 } catch (IOException e1) {
                     e1.printStackTrace();

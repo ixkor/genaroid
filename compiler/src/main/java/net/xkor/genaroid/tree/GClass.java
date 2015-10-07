@@ -260,8 +260,7 @@ public class GClass extends GElement {
         int paramNum = 0;
         for (Type paramType : methodSymbol.asType().getParameterTypes()) {
             Name paramName = utils.getName("param" + paramNum++);
-            JCExpression returnTypeName = getEnvironment().createParser(paramType.asElement().getQualifiedName().toString()).parseType();
-            params = params.append(maker.VarDef(maker.Modifiers(0), paramName, returnTypeName, null));
+            params = params.append(maker.at(getTree().getStartPosition()).Param(paramName, paramType, null));
         }
         long modifiers = methodSymbol.flags() & (Flags.PUBLIC | Flags.PRIVATE | Flags.PROTECTED);
         JCTree.JCAnnotation overrideAnnotation = maker.Annotation(maker.Ident(utils.getName("Override")), List.<JCExpression>nil());
@@ -314,11 +313,6 @@ public class GClass extends GElement {
         return createNewInstance(getName(), params);
     }
 
-    @Override
-    public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
-        return JavacElements.getAnnotation(getElement(), annotationClass);
-    }
-
     public <T extends Annotation> boolean isBaseWithAnnotation(Class<T> annotationClass) {
         Boolean result = baseClassForAnnotion.get(annotationClass);
         if (result != null) {
@@ -329,7 +323,7 @@ public class GClass extends GElement {
         Symbol.ClassSymbol currentClass = getElement();
         while (currentClass != null) {
             currentClass = (Symbol.ClassSymbol) currentClass.getSuperclass().asElement();
-            if (currentClass != null && JavacElements.getAnnotation(currentClass, annotationClass) != null) {
+            if (currentClass != null && currentClass.getAnnotation(annotationClass) != null) {
                 result = false;
                 break;
             }
