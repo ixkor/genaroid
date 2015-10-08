@@ -14,20 +14,17 @@
  * limitations under the License.
  */
 
-package net.xkor.genaroid.example;
+package net.xkor.genaroid.wrap;
 
-import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.model.JavacElements;
 
-import net.xkor.genaroid.annotations.BuilderParam;
-import net.xkor.genaroid.annotations.GFragment;
-import net.xkor.genaroid.annotations.InstanceState;
+public class InflatableWrapper extends BaseClassWrapper {
+    public InflatableWrapper(JavacElements utils) {
+        super(utils, "net.xkor.genaroid.internal.Inflatable");
+    }
 
-@GFragment()
-public class BaseFragment extends Fragment {
-    @InstanceState
-    private Bundle bundleField;
-
-    @BuilderParam()
-    private int testArg;
+    public Symbol.MethodSymbol getGetLayoutIdMethod() {
+        return (Symbol.MethodSymbol) getMember("_gen_getLayoutId");
+    }
 }

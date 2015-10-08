@@ -26,6 +26,7 @@ import net.xkor.genaroid.annotations.InjectGenaroidCall;
 import net.xkor.genaroid.tree.GClass;
 import net.xkor.genaroid.tree.GMethod;
 import net.xkor.genaroid.wrap.ActivityWrapper;
+import net.xkor.genaroid.wrap.InflatableWrapper;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -42,6 +43,7 @@ public class GActivityProcessor implements SubProcessor {
         JavacElements utils = environment.getUtils();
         Symbol.ClassSymbol instanceStateType = utils.getTypeElement(ANNOTATION_CLASS_NAME);
         ActivityWrapper activityWrapper = new ActivityWrapper(utils);
+        InflatableWrapper inflatableWrapper = new InflatableWrapper(utils);
 
         Set<GClass> activities = environment.getGElementsAnnotatedWith(GActivity.class, GClass.class);
         List<GClass> sortedActivities = new ArrayList<>(activities);
@@ -70,20 +72,22 @@ public class GActivityProcessor implements SubProcessor {
                         layoutId = value.toString();
                     }
                 }
-                activity.overrideMethod(activityWrapper.getOnCreateMethod(), true)
-                        .appendCodeAfterSuper("setContentView(%s);", layoutId);
+
+                activity.implementIfNeeded(inflatableWrapper.getClassSymbol());
+                activity.overrideMethod(inflatableWrapper.getGetLayoutIdMethod(), false)
+                        .appendCode("return %s;", layoutId);
             }
 
-            activity.getGUnit().addNewImports(GenaroidEnvironment.GENAROID_MAIN_CLASS);
-
-            GMethod onCreateMethod = activity.overrideMethod(activityWrapper.getOnCreateMethod(), true);
-
             if (activity.isBaseWithAnnotation(GActivity.class)) {
+                activity.getGUnit().addNewImports(GenaroidEnvironment.GENAROID_MAIN_CLASS);
+                GMethod onCreateMethod = activity.overrideMethod(activityWrapper.getOnCreateMethod(), true);
+
                 if ((annotation.injectCalls() & InjectGenaroidCall.INSTANCE_STATE) != 0) {
                     activity.overrideMethod(activityWrapper.getOnSaveInstanceStateMethod(), true)
                             .appendCode("Genaroid.saveInstanceState(this, $p0);");
                     onCreateMethod.prependCode("Genaroid.restoreInstanceState(this, $p0);");
                 }
+
                 if ((annotation.injectCalls() & InjectGenaroidCall.BIND) != 0) {
                     activity.overrideMethod(activityWrapper.getOnContentChangedMethod(), true)
                             .appendCode("Genaroid.bind(this);");
@@ -91,6 +95,11 @@ public class GActivityProcessor implements SubProcessor {
 
                 if ((annotation.injectCalls() & InjectGenaroidCall.READ_PARAMS) != 0) {
                     onCreateMethod.prependCode("Genaroid.readParams(this);");
+                }
+
+                if ((annotation.injectCalls() & InjectGenaroidCall.INFLATE_LAYOUT) != 0) {
+                    onCreateMethod.appendCodeAfterSuper("if (Genaroid.getLayoutId(this) != 0) {\n" +
+                            "setContentView(Genaroid.getLayoutId(this));\n}");
                 }
             }
         }

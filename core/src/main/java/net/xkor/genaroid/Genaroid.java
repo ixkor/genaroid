@@ -19,11 +19,13 @@ package net.xkor.genaroid;
 import android.app.Activity;
 import android.app.Fragment;
 import android.os.Bundle;
+import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.View;
 
 import net.xkor.genaroid.internal.Bindable;
+import net.xkor.genaroid.internal.Inflatable;
 import net.xkor.genaroid.internal.Parameterizable;
 import net.xkor.genaroid.internal.Restorable;
 
@@ -74,5 +76,13 @@ public final class Genaroid {
 
     public static void readParams(@NonNull android.support.v4.app.Fragment fragment) {
         readParams(fragment, fragment.getArguments());
+    }
+
+    @LayoutRes
+    public static int getLayoutId(@NonNull Object object) {
+        if (object instanceof Inflatable) {
+            return ((Inflatable) object)._gen_getLayoutId();
+        }
+        return 0;
     }
 }

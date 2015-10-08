@@ -83,6 +83,16 @@ public class GClass extends GElement {
         return gClass;
     }
 
+    public static GClass findGClass(GenaroidEnvironment environment, Element element) {
+        GUnit unit = GUnit.findGUnit(environment, element);
+        if (unit == null) {
+            return null;
+        }
+
+        String className = GElement.getName(element);
+        return unit.getGClass(className);
+    }
+
     public JCClassDecl getClassDecl() {
         return classDecl;
     }
@@ -152,13 +162,28 @@ public class GClass extends GElement {
 
     public <T extends GClassMember> void implementInBestParent(Symbol.ClassSymbol interfaceType, Set<T> members) {
         if (!isSubClass(interfaceType)) {
-            GClass classToRestorableImplement = this;
+            GClass classToImplement = this;
             for (GClassMember member : members) {
-                if (member.getGClass() != classToRestorableImplement && classToRestorableImplement.isSubClass(member.getGClass())) {
-                    classToRestorableImplement = member.getGClass();
+                if (member.getGClass() != classToImplement && classToImplement.isSubClass(member.getGClass())) {
+                    classToImplement = member.getGClass();
                 }
             }
-            classToRestorableImplement.implement(interfaceType);
+            classToImplement.implement(interfaceType);
+        }
+    }
+
+    public void implementIfNeeded(Symbol.ClassSymbol interfaceType) {
+        if (!isSubClass(interfaceType)) {
+            GClass classToImplement = this;
+            Symbol.ClassSymbol currentClass = getElement();
+            while (currentClass != null) {
+                if (classToImplement != null && classToImplement.isImplementedByProcessor(interfaceType)) {
+                    return;
+                }
+                currentClass = (Symbol.ClassSymbol) currentClass.getSuperclass().asElement();
+                classToImplement = GClass.findGClass(getEnvironment(), currentClass);
+            }
+            implement(interfaceType);
         }
     }
 
@@ -260,7 +285,8 @@ public class GClass extends GElement {
         int paramNum = 0;
         for (Type paramType : methodSymbol.asType().getParameterTypes()) {
             Name paramName = utils.getName("param" + paramNum++);
-            params = params.append(maker.at(getTree().getStartPosition()).Param(paramName, paramType, null));
+            JCExpression returnTypeName = getEnvironment().createParser(paramType.asElement().getQualifiedName().toString()).parseType();
+            params = params.append(maker.at(getTree().getStartPosition()).VarDef(maker.Modifiers(Flags.PARAMETER), paramName, returnTypeName, null));
         }
         long modifiers = methodSymbol.flags() & (Flags.PUBLIC | Flags.PRIVATE | Flags.PROTECTED);
         JCTree.JCAnnotation overrideAnnotation = maker.Annotation(maker.Ident(utils.getName("Override")), List.<JCExpression>nil());

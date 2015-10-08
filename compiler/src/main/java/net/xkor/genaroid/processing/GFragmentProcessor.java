@@ -27,6 +27,7 @@ import net.xkor.genaroid.tree.GClass;
 import net.xkor.genaroid.tree.GMethod;
 import net.xkor.genaroid.wrap.BaseFragmentWrapper;
 import net.xkor.genaroid.wrap.FragmentWrapper;
+import net.xkor.genaroid.wrap.InflatableWrapper;
 import net.xkor.genaroid.wrap.SupportFragmentWrapper;
 
 import java.util.ArrayList;
@@ -45,6 +46,7 @@ public class GFragmentProcessor implements SubProcessor {
         Symbol.ClassSymbol instanceStateType = utils.getTypeElement(ANNOTATION_CLASS_NAME);
         BaseFragmentWrapper nativeFragmentWrapper = new FragmentWrapper(utils);
         BaseFragmentWrapper supportFragmentWrapper = new SupportFragmentWrapper(utils);
+        InflatableWrapper inflatableWrapper = new InflatableWrapper(utils);
 
         Set<GClass> fragments = environment.getGElementsAnnotatedWith(GFragment.class, GClass.class);
         List<GClass> sortedFragments = new ArrayList<>(fragments);
@@ -78,21 +80,16 @@ public class GFragmentProcessor implements SubProcessor {
                         layoutId = value.toString();
                     }
                 }
-                GMethod onCreateViewMethod = fragment.overrideMethod(fragmentWrapper.getOnCreateViewMethod(), false);
-                if (onCreateViewMethod.getBody().size() > 0) {
-                    environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
-                            "You can not override method onCreateView when the value parameter of GFragment annotation is set",
-                            fragment.getElement());
-                    continue;
-                }
-                onCreateViewMethod.appendCode("return $p0.inflate(%s, $p1, false);", layoutId);
+
+                fragment.implementIfNeeded(inflatableWrapper.getClassSymbol());
+                fragment.overrideMethod(inflatableWrapper.getGetLayoutIdMethod(), false)
+                        .appendCode("return %s;", layoutId);
             }
 
-            fragment.getGUnit().addNewImports(GenaroidEnvironment.GENAROID_MAIN_CLASS);
-
-            GMethod onCreateMethod = fragment.overrideMethod(fragmentWrapper.getOnCreateMethod(), true);
-
             if (fragment.isBaseWithAnnotation(GFragment.class)) {
+                fragment.getGUnit().addNewImports(GenaroidEnvironment.GENAROID_MAIN_CLASS);
+                GMethod onCreateMethod = fragment.overrideMethod(fragmentWrapper.getOnCreateMethod(), true);
+
                 if ((annotation.injectCalls() & InjectGenaroidCall.INSTANCE_STATE) != 0) {
                     fragment.overrideMethod(fragmentWrapper.getOnSaveInstanceStateMethod(), true)
                             .appendCode("Genaroid.saveInstanceState(this, $p0);");
@@ -108,6 +105,18 @@ public class GFragmentProcessor implements SubProcessor {
 
                 if ((annotation.injectCalls() & InjectGenaroidCall.READ_PARAMS) != 0) {
                     onCreateMethod.prependCode("Genaroid.readParams(this);");
+                }
+
+                if ((annotation.injectCalls() & InjectGenaroidCall.INFLATE_LAYOUT) != 0) {
+                    GMethod onCreateViewMethod = fragment.overrideMethod(fragmentWrapper.getOnCreateViewMethod(), false);
+                    if (onCreateViewMethod.getBody().size() > 0) {
+                        environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                                "You can not override method onCreateView when the injectCalls parameter of GFragment annotation contains InjectGenaroidCall.INFLATE_LAYOUT value",
+                                fragment.getElement());
+                        continue;
+                    }
+                    onCreateViewMethod.appendCode("if (Genaroid.getLayoutId(this) != 0) {\n" +
+                            "return $p0.inflate(Genaroid.getLayoutId(this), $p1, false);\n} else {\nreturn null;\n}");
                 }
             }
         }

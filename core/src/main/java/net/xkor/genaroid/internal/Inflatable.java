@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
-package net.xkor.genaroid.example;
+package net.xkor.genaroid.internal;
 
-import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import android.support.annotation.LayoutRes;
 
-import net.xkor.genaroid.annotations.BuilderParam;
-import net.xkor.genaroid.annotations.GFragment;
-import net.xkor.genaroid.annotations.InstanceState;
-
-@GFragment()
-public class BaseFragment extends Fragment {
-    @InstanceState
-    private Bundle bundleField;
-
-    @BuilderParam()
-    private int testArg;
+/**
+ * For internal usage only!
+ *
+ * @hide
+ */
+public interface Inflatable {
+    @LayoutRes
+    int _gen_getLayoutId();
 }

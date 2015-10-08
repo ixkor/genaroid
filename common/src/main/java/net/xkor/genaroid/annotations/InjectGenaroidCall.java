@@ -26,6 +26,7 @@ import java.lang.annotation.RetentionPolicy;
         InjectGenaroidCall.BIND,
         InjectGenaroidCall.INSTANCE_STATE,
         InjectGenaroidCall.READ_PARAMS,
+        InjectGenaroidCall.INFLATE_LAYOUT,
         InjectGenaroidCall.ALL})
 @Retention(RetentionPolicy.SOURCE)
 public @interface InjectGenaroidCall {
@@ -33,5 +34,6 @@ public @interface InjectGenaroidCall {
     int BIND = 1;
     int INSTANCE_STATE = 1 << 1;
     int READ_PARAMS = 1 << 2;
-    int ALL = BIND | INSTANCE_STATE | READ_PARAMS;
+    int INFLATE_LAYOUT = 1 << 3;
+    int ALL = BIND | INSTANCE_STATE | READ_PARAMS | INFLATE_LAYOUT;
 }

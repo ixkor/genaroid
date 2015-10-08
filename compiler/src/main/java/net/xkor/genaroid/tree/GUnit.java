@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package net.xkor.genaroid.tree;
 
 import com.sun.tools.javac.tree.JCTree;
@@ -70,6 +71,11 @@ public class GUnit {
             environment.putUnit(unit);
         }
         return unit;
+    }
+
+    public static GUnit findGUnit(GenaroidEnvironment environment, Element element) {
+        Pair<JCTree, JCCompilationUnit> pair = environment.getTreeAndTopLevel(element);
+        return pair == null ? null : environment.getUnit(pair.snd.getSourceFile().getName());
     }
 
     public Collection<GClass> getGClasses() {
