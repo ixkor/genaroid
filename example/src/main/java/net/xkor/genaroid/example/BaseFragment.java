@@ -24,7 +24,7 @@ import net.xkor.genaroid.annotations.GFragment;
 import net.xkor.genaroid.annotations.InstanceState;
 
 @GFragment()
-public class BaseFragment extends Fragment {
+public abstract class BaseFragment extends Fragment {
     @InstanceState
     private Bundle bundleField;
 

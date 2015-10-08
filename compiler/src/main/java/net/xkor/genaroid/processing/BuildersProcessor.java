@@ -17,13 +17,13 @@
 package net.xkor.genaroid.processing;
 
 import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
+import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.model.JavacElements;
@@ -207,10 +207,11 @@ public class BuildersProcessor implements SubProcessor {
         private final String name;
 
         private final ArrayList<MethodParameter> constructorParams = new ArrayList<>();
-        private CodeBlock.Builder publicConstructorSuperCallBuilder;
+        private final boolean isAbstract;
 
         public BuilderClass(Symbol.ClassSymbol classSymbol, BuilderClass superBuilder) {
             this.superBuilder = superBuilder;
+            isAbstract = (classSymbol.flags() & Flags.ABSTRACT) != 0;
 
             packageName = classSymbol.packge().toString();
             baseName = classSymbol.getSimpleName().toString() + "BaseBuilder";
@@ -318,7 +319,9 @@ public class BuildersProcessor implements SubProcessor {
             }
             publicConstructorBuilder.addCode(");\n$]");
 
-            writeToFile(environment, classBuilder.addMethod(publicConstructorBuilder.build()).build());
+            if (!isAbstract) {
+                writeToFile(environment, classBuilder.addMethod(publicConstructorBuilder.build()).build());
+            }
             writeToFile(environment, classBaseBuilder.addMethod(protectedConstructorBuilder.build()).build());
         }
 
