@@ -79,18 +79,20 @@ public class GActivityProcessor implements SubProcessor {
             GMethod onCreateMethod = activity.overrideMethod(activityWrapper.getOnCreateMethod(), true);
 
             if (activity.isBaseWithAnnotation(GActivity.class)) {
-                if ((annotation.injectCalls() & InjectGenaroidCall.INSTANCE_STATE) == InjectGenaroidCall.INSTANCE_STATE) {
+                if ((annotation.injectCalls() & InjectGenaroidCall.INSTANCE_STATE) != 0) {
                     activity.overrideMethod(activityWrapper.getOnSaveInstanceStateMethod(), true)
                             .appendCode("Genaroid.saveInstanceState(this, $p0);");
                     onCreateMethod.prependCode("Genaroid.restoreInstanceState(this, $p0);");
                 }
-                if ((annotation.injectCalls() & InjectGenaroidCall.BIND) == InjectGenaroidCall.BIND) {
+                if ((annotation.injectCalls() & InjectGenaroidCall.BIND) != 0) {
                     activity.overrideMethod(activityWrapper.getOnContentChangedMethod(), true)
                             .appendCode("Genaroid.bind(this);");
                 }
-            }
 
-            onCreateMethod.prependCode("Genaroid.readParams(this);");
+                if ((annotation.injectCalls() & InjectGenaroidCall.READ_PARAMS) != 0) {
+                    onCreateMethod.prependCode("Genaroid.readParams(this);");
+                }
+            }
         }
     }
 

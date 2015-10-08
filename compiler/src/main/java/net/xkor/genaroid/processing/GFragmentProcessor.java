@@ -93,21 +93,23 @@ public class GFragmentProcessor implements SubProcessor {
             GMethod onCreateMethod = fragment.overrideMethod(fragmentWrapper.getOnCreateMethod(), true);
 
             if (fragment.isBaseWithAnnotation(GFragment.class)) {
-                if ((annotation.injectCalls() & InjectGenaroidCall.INSTANCE_STATE) == InjectGenaroidCall.INSTANCE_STATE) {
+                if ((annotation.injectCalls() & InjectGenaroidCall.INSTANCE_STATE) != 0) {
                     fragment.overrideMethod(fragmentWrapper.getOnSaveInstanceStateMethod(), true)
                             .appendCode("Genaroid.saveInstanceState(this, $p0);");
                     onCreateMethod.prependCode("Genaroid.restoreInstanceState(this, $p0);");
                 }
 
-                if ((annotation.injectCalls() & InjectGenaroidCall.BIND) == InjectGenaroidCall.BIND) {
+                if ((annotation.injectCalls() & InjectGenaroidCall.BIND) != 0) {
                     fragment.overrideMethod(fragmentWrapper.getOnViewCreatedMethod(), true)
                             .appendCode("Genaroid.bind(this, $p0);");
                     fragment.overrideMethod(fragmentWrapper.getOnDestroyViewMethod(), true)
                             .appendCode("Genaroid.unbind(this);");
                 }
-            }
 
-            onCreateMethod.prependCode("Genaroid.readParams(this);");
+                if ((annotation.injectCalls() & InjectGenaroidCall.READ_PARAMS) != 0) {
+                    onCreateMethod.prependCode("Genaroid.readParams(this);");
+                }
+            }
         }
     }
 

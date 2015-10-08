@@ -21,11 +21,17 @@ import android.support.annotation.IntDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-@IntDef(flag = true, value = {InjectGenaroidCall.NONE, InjectGenaroidCall.BIND, InjectGenaroidCall.INSTANCE_STATE, InjectGenaroidCall.ALL})
+@IntDef(flag = true, value = {
+        InjectGenaroidCall.NONE,
+        InjectGenaroidCall.BIND,
+        InjectGenaroidCall.INSTANCE_STATE,
+        InjectGenaroidCall.READ_PARAMS,
+        InjectGenaroidCall.ALL})
 @Retention(RetentionPolicy.SOURCE)
 public @interface InjectGenaroidCall {
     int NONE = 0;
     int BIND = 1;
-    int INSTANCE_STATE = 2;
-    int ALL = BIND | INSTANCE_STATE;
+    int INSTANCE_STATE = 1 << 1;
+    int READ_PARAMS = 1 << 2;
+    int ALL = BIND | INSTANCE_STATE | READ_PARAMS;
 }
