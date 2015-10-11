@@ -25,7 +25,7 @@ import com.sun.tools.javac.tree.JCTree.JCExpression;
 import net.xkor.genaroid.GenaroidEnvironment;
 import net.xkor.genaroid.annotations.ViewById;
 import net.xkor.genaroid.tree.GField;
-import net.xkor.genaroid.wrap.BaseClassWrapper;
+import net.xkor.genaroid.wrap.BindableWrapper;
 import net.xkor.genaroid.wrap.ViewWrapper;
 
 import java.util.Collections;
@@ -59,9 +59,9 @@ public class ViewByIdProcessor implements SubProcessor {
 
             field.getGClass().implementInBestParent(bindableWrapper.getClassSymbol(), allFields);
 
-            field.getGClass().overrideMethod(bindableWrapper.getFindViewsMethod(), true)
+            field.getGClass().overrideMethod(bindableWrapper.getBindMethod(), true)
                     .prependCode("this.%s = (%s) $p0.findViewById(%s);", field.getName(), fieldType, value);
-            field.getGClass().overrideMethod(bindableWrapper.getClearViewsMethod(), true)
+            field.getGClass().overrideMethod(bindableWrapper.getUnbindMethod(), true)
                     .prependCode("this.%s = null;", field.getName());
         }
     }
@@ -69,19 +69,5 @@ public class ViewByIdProcessor implements SubProcessor {
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         return Collections.singleton(ANNOTATION_CLASS_NAME);
-    }
-
-    private class BindableWrapper extends BaseClassWrapper {
-        public BindableWrapper(JavacElements utils) {
-            super(utils, "net.xkor.genaroid.internal.Bindable");
-        }
-
-        public Symbol.MethodSymbol getFindViewsMethod() {
-            return (Symbol.MethodSymbol) getMember("_gen_bind");
-        }
-
-        public Symbol.MethodSymbol getClearViewsMethod() {
-            return (Symbol.MethodSymbol) getMember("_gen_unbind");
-        }
     }
 }

@@ -171,8 +171,24 @@ public class GenaroidEnvironment {
         return voidType;
     }
 
+    public JCExpression typeToTree(Type type) {
+        return typeToTree(type.asElement());
+    }
+
+    public JCExpression typeToTree(Symbol.TypeSymbol typeSymbol) {
+        return createParser(typeSymbol.getQualifiedName().toString()).parseType();
+    }
+
     public Parser createParser(String sources) {
         return parserFactory.newParser(sources, false, false, false);
+    }
+
+    public JCTree.JCStatement codeToStatement(String code, Object... args) {
+        return createParser(String.format(code, args)).parseStatement();
+    }
+
+    public JCTree.JCExpression codeToExpression(String code, Object... args) {
+        return createParser(String.format(code, args)).parseExpression();
     }
 
     public JavacTypes getTypeUtils() {
@@ -193,6 +209,14 @@ public class GenaroidEnvironment {
 
     public Collection<GUnit> getUnits() {
         return units.values();
+    }
+
+    public Collection<GClass> getClasses() {
+        ArrayList<GClass> classes = new ArrayList<>();
+        for (GUnit unit : units.values()) {
+            classes.addAll(unit.getGClasses());
+        }
+        return classes;
     }
 
     public Messager getMessager() {

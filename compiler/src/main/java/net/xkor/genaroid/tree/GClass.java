@@ -187,6 +187,37 @@ public class GClass extends GElement {
         }
     }
 
+    public void fixImplementation(Symbol.ClassSymbol interfaceType) {
+        if (isImplementedByProcessor(interfaceType)) {
+            Symbol.ClassSymbol currentClass = getElement();
+            while (currentClass != null) {
+                currentClass = (Symbol.ClassSymbol) currentClass.getSuperclass().asElement();
+                GClass parentClass = GClass.findGClass(getEnvironment(), currentClass);
+                if (parentClass != null && parentClass.isImplementedByProcessor(interfaceType)) {
+                    parentClass.fixImplementation(interfaceType);
+                    removeInterface(interfaceType);
+                    do {
+                        for (Symbol symbol : interfaceType.members().getElements(methodsFilter)) {
+                            overrideMethod((Symbol.MethodSymbol) symbol, false).appendSuperCall();
+                        }
+                        interfaceType = (Symbol.ClassSymbol) interfaceType.getSuperclass().asElement();
+                    } while (interfaceType != null);
+                }
+            }
+        }
+    }
+
+    private void removeInterface(Symbol.ClassSymbol interfaceType) {
+        String name = interfaceType.getQualifiedName().toString();
+        List<JCExpression> interfaces = List.nil();
+        for (JCExpression jcInterface : classDecl.implementing) {
+            if (!name.equals(jcInterface.toString())) {
+                interfaces = interfaces.append(jcInterface);
+            }
+        }
+        classDecl.implementing = interfaces;
+    }
+
     public void implement(Symbol.ClassSymbol interfaceType) {
         if (!interfaceType.isInterface()) {
             throw new RuntimeException("Can not implement non interface type");
@@ -269,14 +300,16 @@ public class GClass extends GElement {
             return method;
         }
 
-        for (Element member : getElement().getEnclosedElements()) {
-            String signature = GClassMember.getMemberSignature(member);
-            if (member instanceof Symbol.MethodSymbol && signature.equals(memberSignature)) {
-                return GMethod.getGMethod(getEnvironment(), member);
+        if (getElement() != null) {
+            for (Element member : getElement().getEnclosedElements()) {
+                String signature = GClassMember.getMemberSignature(member);
+                if (member instanceof Symbol.MethodSymbol && signature.equals(memberSignature)) {
+                    return GMethod.getGMethod(getEnvironment(), member);
+                }
             }
         }
 
-        TreeMaker maker = getEnvironment().getMaker();
+        TreeMaker maker = getEnvironment().getMaker().forToplevel(getGUnit().getCompilationUnit());
         JavacElements utils = getEnvironment().getUtils();
 
         String typeName = methodSymbol.getReturnType().asElement().getQualifiedName().toString();
@@ -285,7 +318,7 @@ public class GClass extends GElement {
         int paramNum = 0;
         for (Type paramType : methodSymbol.asType().getParameterTypes()) {
             Name paramName = utils.getName("param" + paramNum++);
-            JCExpression returnTypeName = getEnvironment().createParser(paramType.asElement().getQualifiedName().toString()).parseType();
+            JCExpression returnTypeName = getEnvironment().typeToTree(paramType);
             params = params.append(maker.at(getTree().getStartPosition()).VarDef(maker.Modifiers(Flags.PARAMETER), paramName, returnTypeName, null));
         }
         long modifiers = methodSymbol.flags() & (Flags.PUBLIC | Flags.PRIVATE | Flags.PROTECTED);
@@ -306,20 +339,7 @@ public class GClass extends GElement {
         method.setMemberSignature(memberSignature);
 
         if (addSupperCall) {
-            StringBuilder superCallSource = new StringBuilder("super.");
-            superCallSource.append(methodSymbol.getSimpleName().toString());
-            superCallSource.append("(");
-
-            for (JCVariableDecl param : methodDecl.getParameters()) {
-                if (superCallSource.charAt(superCallSource.length() - 1) != '(') {
-                    superCallSource.append(", ");
-                }
-                superCallSource.append(param.getName());
-            }
-            superCallSource.append(");");
-
-            JCStatement superCall = getEnvironment().createParser(superCallSource.toString()).parseStatement();
-            method.appendCode(superCall);
+            method.appendSuperCall();
         }
 
         putMember(method);

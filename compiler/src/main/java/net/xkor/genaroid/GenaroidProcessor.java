@@ -22,6 +22,7 @@ import net.xkor.genaroid.processing.BuildersProcessor;
 import net.xkor.genaroid.processing.GActivityProcessor;
 import net.xkor.genaroid.processing.GFragmentProcessor;
 import net.xkor.genaroid.processing.InstanceStateProcessor;
+import net.xkor.genaroid.processing.ListenersProcessor;
 import net.xkor.genaroid.processing.SubProcessor;
 import net.xkor.genaroid.processing.ViewByIdProcessor;
 import net.xkor.genaroid.tree.GUnit;
@@ -53,6 +54,7 @@ public class GenaroidProcessor extends AbstractProcessor {
         processors.add(new ViewByIdProcessor());
         processors.add(new InstanceStateProcessor());
         processors.add(new BuildersProcessor());
+        processors.add(new ListenersProcessor());
     }
 
     @Override
@@ -70,8 +72,13 @@ public class GenaroidProcessor extends AbstractProcessor {
         genaroidEnvironment.setRoundEnvironment(roundEnv);
 
         try {
+            long startTime = System.currentTimeMillis();
             for (SubProcessor processor : processors) {
                 processor.process(genaroidEnvironment);
+            }
+            long processTime = System.currentTimeMillis() - startTime;
+            if (genaroidEnvironment.isDebugMode()) {
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Genaroid time: " + processTime + "ms");
             }
 
             for (GUnit unit : genaroidEnvironment.getUnits()) {

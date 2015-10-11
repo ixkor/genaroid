@@ -16,6 +16,8 @@
 
 package net.xkor.genaroid.tree;
 
+import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.tree.JCTree.JCMethodDecl;
 import com.sun.tools.javac.tree.JCTree.JCModifiers;
 import com.sun.tools.javac.tree.JCTree.JCStatement;
@@ -54,6 +56,11 @@ public class GMethod extends GClassMember {
     }
 
     @Override
+    public Symbol.MethodSymbol getElement() {
+        return (Symbol.MethodSymbol) super.getElement();
+    }
+
+    @Override
     protected JCModifiers getModifiers() {
         return getTree().getModifiers();
     }
@@ -62,8 +69,9 @@ public class GMethod extends GClassMember {
         return methodDecl.getParameters().get(index).getName();
     }
 
-    public void appendCode(JCStatement code) {
+    public GMethod appendCode(JCStatement code) {
         methodDecl.getBody().stats = methodDecl.getBody().stats.append(code);
+        return this;
     }
 
     public void appendCodeAfterSuper(JCStatement code) {
@@ -97,8 +105,9 @@ public class GMethod extends GClassMember {
         return getEnvironment().createParser(String.format(code, args)).parseStatement();
     }
 
-    public void prependCode(JCStatement code) {
+    public GMethod prependCode(JCStatement code) {
         methodDecl.getBody().stats = methodDecl.getBody().stats.prepend(code);
+        return this;
     }
 
     public GMethod prependCode(String code, Object... args) {
@@ -112,5 +121,22 @@ public class GMethod extends GClassMember {
 
     public void setBody(List<JCStatement> body) {
         methodDecl.getBody().stats = body;
+    }
+
+    public GMethod appendSuperCall() {
+        StringBuilder superCallSource = new StringBuilder("super.");
+        superCallSource.append(getName());
+        superCallSource.append("(");
+
+        for (JCTree.JCVariableDecl param : methodDecl.getParameters()) {
+            if (superCallSource.charAt(superCallSource.length() - 1) != '(') {
+                superCallSource.append(", ");
+            }
+            superCallSource.append(param.getName());
+        }
+        superCallSource.append(");");
+
+        appendCode(superCallSource.toString());
+        return this;
     }
 }

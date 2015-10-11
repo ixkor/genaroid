@@ -21,10 +21,12 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import net.xkor.genaroid.annotations.BuilderParam;
 import net.xkor.genaroid.annotations.GFragment;
 import net.xkor.genaroid.annotations.InstanceState;
+import net.xkor.genaroid.annotations.OnClick;
 import net.xkor.genaroid.annotations.ViewById;
 
 @GFragment(R.layout.login_fragment)
@@ -47,15 +49,19 @@ public class LoginFragment extends BaseFragment {
         super.onViewCreated(view, savedInstanceState);
         loginField.setText(lastLogin);
         loginField.setError(authError);
-        signInButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (TextUtils.isEmpty(loginField.getText())) {
-                    authError = "Login is empty";
-                    loginField.setError(authError);
-                }
-                // do auth...
-            }
-        });
+    }
+
+    @OnClick(R.id.sign_in)
+    private void signInClick() {
+        if (TextUtils.isEmpty(loginField.getText())) {
+            authError = "Login is empty";
+            loginField.setError(authError);
+        }
+        // do auth...
+    }
+
+    @OnClick({R.id.login, R.id.password, R.id.sign_in})
+    private void clickTest(View view) {
+        Toast.makeText(getActivity(), "clickTest", Toast.LENGTH_LONG).show();
     }
 }

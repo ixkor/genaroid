@@ -26,16 +26,15 @@ public class LoginFragment extends BaseFragment {
         super.onViewCreated(view, savedInstanceState);
         loginField.setText(lastLogin);
         loginField.setError(authError);
-        signInButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (TextUtils.isEmpty(loginField.getText())) {
-                    authError = "Login is empty";
-                    loginField.setError(authError);
-                }
-                // do auth...
-            }
-        });
+    }
+
+    @OnClick(R.id.sign_in)
+    private void signInClick() {
+        if (TextUtils.isEmpty(loginField.getText())) {
+            authError = "Login is empty";
+            loginField.setError(authError);
+        }
+        // do auth...
     }
 }
 ```
@@ -54,8 +53,8 @@ buildscript {
 apply plugin: 'com.neenbedankt.android-apt'
 
 dependencies {
-    compile 'net.xkor.genaroid:core:1.1.2'
-    apt 'net.xkor.genaroid:compiler:1.1.2'
+    compile 'net.xkor.genaroid:core:1.2.0'
+    apt 'net.xkor.genaroid:compiler:1.2.0'
 }
 ```
 

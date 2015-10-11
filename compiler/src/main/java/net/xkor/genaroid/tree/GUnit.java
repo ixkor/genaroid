@@ -115,6 +115,11 @@ public class GUnit {
         return gClass;
     }
 
+    public GClass findAnonymousClass(String tag) {
+        String className = ANONYMOUS_CLASS_PREFIX + tag;
+        return getGClass(className);
+    }
+
     public void addNewImports(List<JCImport> newImports) {
         List<JCTree> defs = List.nil();
         defs = defs.appendList(List.convert(JCTree.class, mergeImports(compilationUnit.getImports(), newImports)));
