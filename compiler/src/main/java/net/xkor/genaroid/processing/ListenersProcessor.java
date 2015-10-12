@@ -49,6 +49,10 @@ public class ListenersProcessor implements SubProcessor {
     private static final String ANNOTATION_CLASS_NAME = CustomListener.class.getCanonicalName();
     private static final String[] STANDARD_LISTENER_ANNOTATIONS = new String[]{
             "net.xkor.genaroid.annotations.OnClick",
+            "net.xkor.genaroid.annotations.OnItemClick",
+            "net.xkor.genaroid.annotations.OnLongClick",
+            "net.xkor.genaroid.annotations.OnItemLongClick",
+            "net.xkor.genaroid.annotations.OnItemSelected",
     };
 
     @Override
