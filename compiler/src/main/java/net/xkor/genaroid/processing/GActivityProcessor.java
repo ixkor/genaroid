@@ -95,6 +95,8 @@ public class GActivityProcessor implements SubProcessor {
 
                 if ((annotation.injectCalls() & InjectGenaroidCall.READ_PARAMS) != 0) {
                     onCreateMethod.prependCode("Genaroid.readParams(this);");
+                    activity.overrideMethod(activityWrapper.getOnNewIntentMethod(), true)
+                            .appendCode("Genaroid.readParams(this, $p0.getExtras());");
                 }
 
                 if ((annotation.injectCalls() & InjectGenaroidCall.INFLATE_LAYOUT) != 0) {

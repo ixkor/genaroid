@@ -48,6 +48,10 @@ public class ActivityWrapper extends BaseUiContainerWrapper {
         return (MethodSymbol) getMember("onRestart");
     }
 
+    public MethodSymbol getOnNewIntentMethod() {
+        return (MethodSymbol) getMember("onNewIntent");
+    }
+
     @Override
     public MethodSymbol getOnSaveInstanceStateMethod() {
         return (MethodSymbol) getMember("onSaveInstanceState", new Filter<Symbol>() {
