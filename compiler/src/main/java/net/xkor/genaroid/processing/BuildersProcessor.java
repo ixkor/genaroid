@@ -143,10 +143,10 @@ public class BuildersProcessor implements SubProcessor {
 
             field.getGClass().implementInBestParent(parameterizableWrapper.getClassSymbol(), allFields);
 
-            GMethod onCreateMethod = field.getGClass().overrideMethod(parameterizableWrapper.getReadParamsMethod(), true);
-            Name bundleParam = onCreateMethod.getParamName(0);
+            GMethod readParamsMethod = field.getGClass().overrideMethod(parameterizableWrapper.getReadParamsMethod(), true);
+            Name bundleParam = readParamsMethod.getParamName(0);
             JCTree.JCStatement restoreStatement = bundleWrapper.getReadStatement(field, fieldNameInBundle, bundleParam);
-            onCreateMethod.prependCode(restoreStatement);
+            readParamsMethod.appendCode(restoreStatement);
 
             Symbol.MethodSymbol putMethod = bundleWrapper.getMethodForType(fieldType, false);
             if (putMethod == null) {

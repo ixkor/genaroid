@@ -117,13 +117,14 @@ public class BundleWrapper extends BaseClassWrapper {
         String methodName = getMethod.getSimpleName().toString();
         String template;
         if (methodName.equals("getSerializable")) {
-            template = "this.%s = (%s) %s.%s(%s);";
+            template = "this.%1$s = (%2$s) %3$s.%4$s(%5$s);";
         } else if (methodName.equals("getParcelableArray")) {
             fieldType = types.elemtype(fieldType);
-            template = "this.%s = net.xkor.genaroid.Utils.castParcelableArray(%s.class, %s.%s(%s));";
+            template = "this.%1$s = net.xkor.genaroid.Utils.castParcelableArray(%2$s.class, %3$s.%4$s(%5$s));";
         } else {
-            template = "this.%s = %3$s.%4$s(%5$s);";
+            template = "this.%1$s = %3$s.%4$s(%5$s);";
         }
+        template = "if (%3$s.containsKey(%5$s)) {\n" + template + "\n}";
         String restoreCode = String.format(
                 template, field.getName(), fieldType, bundleParam, methodName, fieldNameInBundle);
         return environment.createParser(restoreCode).parseStatement();
