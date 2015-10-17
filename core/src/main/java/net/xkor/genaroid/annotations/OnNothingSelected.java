@@ -31,7 +31,7 @@ import java.lang.annotation.Target;
         targetClass = AdapterView.class,
         listenerClass = AdapterView.OnItemSelectedListener.class,
         listenerSetterName = "setOnItemSelectedListener",
-        listenerMethodName = "onItemSelected")
-public @interface OnItemSelected {
+        listenerMethodName = "onNothingSelected")
+public @interface OnNothingSelected {
     @IdRes int[] value();
 }

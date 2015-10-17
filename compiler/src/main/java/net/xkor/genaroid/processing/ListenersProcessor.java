@@ -53,6 +53,7 @@ public class ListenersProcessor implements SubProcessor {
             "net.xkor.genaroid.annotations.OnLongClick",
             "net.xkor.genaroid.annotations.OnItemLongClick",
             "net.xkor.genaroid.annotations.OnItemSelected",
+            "net.xkor.genaroid.annotations.OnNothingSelected",
     };
 
     @Override
