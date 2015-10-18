@@ -22,7 +22,9 @@ import android.os.Bundle;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 
 import net.xkor.genaroid.internal.Bindable;
 import net.xkor.genaroid.internal.Inflatable;
@@ -84,5 +86,22 @@ public final class Genaroid {
             return ((Inflatable) object)._gen_getLayoutId();
         }
         return 0;
+    }
+
+    @Nullable
+    public static View inflate(@NonNull Object fragment, @NonNull LayoutInflater inflater, @Nullable ViewGroup container) {
+        int layoutId = Genaroid.getLayoutId(fragment);
+        if (layoutId != 0) {
+            return inflater.inflate(layoutId, container, false);
+        } else {
+            return null;
+        }
+    }
+
+    public static void setContentView(@NonNull Activity activity) {
+        int layoutId = Genaroid.getLayoutId(activity);
+        if (layoutId != 0) {
+            activity.setContentView(layoutId);
+        }
     }
 }

@@ -100,8 +100,7 @@ public class GActivityProcessor implements SubProcessor {
                 }
 
                 if ((annotation.injectCalls() & InjectGenaroidCall.INFLATE_LAYOUT) != 0) {
-                    onCreateMethod.appendCodeAfterSuper("if (Genaroid.getLayoutId(this) != 0) {\n" +
-                            "setContentView(Genaroid.getLayoutId(this));\n}");
+                    onCreateMethod.appendCodeAfterSuper("Genaroid.setContentView(this);");
                 }
             }
         }

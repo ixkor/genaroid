@@ -115,8 +115,7 @@ public class GFragmentProcessor implements SubProcessor {
                                 fragment.getElement());
                         continue;
                     }
-                    onCreateViewMethod.appendCode("if (Genaroid.getLayoutId(this) != 0) {\n" +
-                            "return $p0.inflate(Genaroid.getLayoutId(this), $p1, false);\n} else {\nreturn null;\n}");
+                    onCreateViewMethod.appendCode("return Genaroid.inflate(this, $p0, $p1);");
                 }
             }
         }
