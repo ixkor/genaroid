@@ -1,10 +1,8 @@
-Genaroid
-=======
-Fast Android development with annotation processing. Field binding for Android views and easy field state restoring which uses annotation processing to generate boilerplate code for you.
- * Eliminate `findViewById` calls by using `@ViewById` on fields.
- * Eliminate `bundle.get*` and `bundle.put*` calls by using `@InstanceState` on fields.
- * Eliminate `setContentView` and `onCreateView` calls and create builders for Fragments and Activities by using `@GActivity` and `@GFragment` on classes and `@BuilderParam` on field that should be set by builder.
+## About
+**Genaroid** is an Open Source library that **speeds up** Android development.
+It takes care of the **plumbing**, and lets you concentrate on what's really important. By **simplifying** your code, it facilitates its **maintenance**.
 
+Example:
 ```java
 @GFragment(R.layout.login_fragment)
 public class LoginFragment extends BaseFragment {
@@ -37,16 +35,17 @@ public class LoginFragment extends BaseFragment {
         // do auth...
     }
 }
+
+// instantiate fragment:
+LoginFragment fragment = new LoginFragmentBuilder("last login").instantiate();
 ```
 
-Usage
---------
-
+## Configuration
 Gradle:
 ```groovy
 buildscript {
     dependencies {
-        classpath 'com.neenbedankt.gradle.plugins:android-apt:1.7'
+        classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
     }
 }
 
@@ -58,9 +57,17 @@ dependencies {
 }
 ```
 
-License
--------
+## Available Annotations:
+* [@ViewById](https://github.com/ixkor/genaroid/wiki#viewbyid) - inject view to Activity, Fragment or other object field;
+* [@InstanceState](https://github.com/ixkor/genaroid/wiki#instancestate) - save and restore a field value when Activity or Fragment are recreated;
+* [@BuilderParam](https://github.com/ixkor/genaroid/wiki#builderparam) - add a field to Activity or Fragment builder;
+* [@GActivity and @GFragment](https://github.com/ixkor/genaroid/wiki#gactivity-and-gfragment);
+* [@OnClick and other envents](https://github.com/ixkor/genaroid/wiki#events);
+* [@CustomListener](https://github.com/ixkor/genaroid/wiki#customlistener) - user defined events;
 
+[Full documentation](https://github.com/ixkor/genaroid/wiki)
+
+## License
     Copyright 2013 Aleksei Skoriatin
 
     Licensed under the Apache License, Version 2.0 (the "License");
