@@ -96,7 +96,7 @@ public class GenaroidProcessor extends AbstractProcessor {
                     e1.printStackTrace();
                 }
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, e.toString());
             e.printStackTrace();
             return false;

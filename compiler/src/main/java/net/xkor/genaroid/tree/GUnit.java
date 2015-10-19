@@ -98,27 +98,27 @@ public class GUnit {
         return environment;
     }
 
-    public GClass createAnonymousClass() {
-        TreeMaker maker = environment.getMaker();
+    public GClass createAnonymousClass(JCClassDecl owner) {
+        TreeMaker maker = environment.getMaker().at(owner.getStartPosition());
         JCClassDecl classDecl = maker.AnonymousClassDef(maker.Modifiers(0), List.<JCTree>nil());
         return new GClass(this, classDecl, null);
     }
 
-    public GClass createOrGetAnonymousClass(String tag) {
-        String className = ANONYMOUS_CLASS_PREFIX + tag;
-        GClass gClass = getGClass(className);
-        if (gClass == null) {
-            gClass = createAnonymousClass();
-            gClass.setName(className);
-            putGClass(gClass);
-        }
-        return gClass;
-    }
-
-    public GClass findAnonymousClass(String tag) {
-        String className = ANONYMOUS_CLASS_PREFIX + tag;
-        return getGClass(className);
-    }
+//    public GClass createOrGetAnonymousClass(String tag) {
+//        String className = ANONYMOUS_CLASS_PREFIX + tag;
+//        GClass gClass = getGClass(className);
+//        if (gClass == null) {
+//            gClass = createAnonymousClass();
+//            gClass.setName(className);
+//            putGClass(gClass);
+//        }
+//        return gClass;
+//    }
+//
+//    public GClass findAnonymousClass(String tag) {
+//        String className = ANONYMOUS_CLASS_PREFIX + tag;
+//        return getGClass(className);
+//    }
 
     public void addNewImports(List<JCImport> newImports) {
         List<JCTree> defs = List.nil();

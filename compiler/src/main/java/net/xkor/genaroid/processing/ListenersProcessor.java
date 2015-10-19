@@ -17,7 +17,6 @@
 package net.xkor.genaroid.processing;
 
 import com.sun.tools.javac.code.Symbol;
-import com.sun.tools.javac.code.Symtab;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.model.JavacElements;
@@ -43,6 +42,8 @@ import java.util.Set;
 import javax.lang.model.element.Element;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.MirroredTypeException;
+import javax.lang.model.type.PrimitiveType;
+import javax.lang.model.type.TypeKind;
 import javax.tools.Diagnostic;
 
 public class ListenersProcessor implements SubProcessor {
@@ -61,8 +62,8 @@ public class ListenersProcessor implements SubProcessor {
         JavacElements utils = environment.getUtils();
         Types types = environment.getTypes();
         TreeMaker maker = environment.getMaker();
-        Symtab symtab = Symtab.instance(environment.getJavacProcessingEnv().getContext());
         BindableWrapper bindableWrapper = new BindableWrapper(utils);
+        PrimitiveType intType = environment.getTypeUtils().getPrimitiveType(TypeKind.INT);
 
         HashMap<String, GClass> listeners = new HashMap<>();
         Collection<Symbol.ClassSymbol> annotations = getListenerAnnotations(environment);
@@ -86,7 +87,7 @@ public class ListenersProcessor implements SubProcessor {
                     }
 
                     Type returnType = member.type.asMethodType().getReturnType();
-                    if (!types.isArray(returnType) || !types.elemtype(returnType).equals(symtab.intType)) {
+                    if (!types.isArray(returnType) || !types.elemtype(returnType).equals(intType)) {
                         environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
                                 "Annotation " + annotationSymbol.getSimpleName() + " must has value parameter with int[] type",
                                 annotationSymbol);
@@ -176,7 +177,7 @@ public class ListenersProcessor implements SubProcessor {
                     String listenerVarName = "listener" + Integer.toHexString((method.getGClass().getElement().getQualifiedName() + "_" + viewId + "_" + listenerSetter.getQualifiedName() + "_" + listenerClassSymbol.getQualifiedName()).hashCode());
                     GClass listenerImplementor = listeners.get(listenerVarName);
                     if (listenerImplementor == null) {
-                        listenerImplementor = method.getGClass().getGUnit().createAnonymousClass();
+                        listenerImplementor = method.getGClass().getGUnit().createAnonymousClass(method.getGClass().getClassDecl());
                         listenerImplementor.implement(listenerClassSymbol);
                         listeners.put(listenerVarName, listenerImplementor);
                         JCTree.JCExpression listenerType = environment.typeToTree(listenerClassSymbol);

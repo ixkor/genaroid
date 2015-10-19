@@ -41,6 +41,8 @@ import net.xkor.genaroid.tree.GMethod;
 import net.xkor.genaroid.tree.GUnit;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -61,6 +63,7 @@ public class GenaroidEnvironment {
     private RoundEnvironment roundEnvironment;
     private TreeMaker maker;
     private ParserFactory parserFactory;
+    private Method newParserMethod;
     private JavacElements utils;
     private JavacTrees trees;
     private JavacTypes typeUtils;
@@ -87,6 +90,12 @@ public class GenaroidEnvironment {
         objectClass = utils.getTypeElement("java.lang.Object");
 
         debugMode = Boolean.parseBoolean(javacProcessingEnv.getOptions().get(DEBUG_MODE_OPTION_NAME));
+
+        // reflection
+        try {
+            newParserMethod = ParserFactory.class.getMethod("newParser", CharSequence.class, Boolean.TYPE, Boolean.TYPE, Boolean.TYPE);
+        } catch (NoSuchMethodException ignored) {
+        }
     }
 
     public Pair<JCTree, JCCompilationUnit> getTreeAndTopLevel(Element e) {
@@ -180,7 +189,11 @@ public class GenaroidEnvironment {
     }
 
     public Parser createParser(String sources) {
-        return parserFactory.newParser(sources, false, false, false);
+        try {
+            return (Parser) newParserMethod.invoke(parserFactory, sources, false, false, false);
+        } catch (IllegalAccessException | InvocationTargetException ignored) {
+        }
+        return null;
     }
 
     public JCTree.JCStatement codeToStatement(String code, Object... args) {
