@@ -52,8 +52,8 @@ buildscript {
 apply plugin: 'com.neenbedankt.android-apt'
 
 dependencies {
-    compile 'net.xkor.genaroid:core:1.2.4'
-    apt 'net.xkor.genaroid:compiler:1.2.4'
+    compile 'net.xkor.genaroid:core:1.2.5'
+    apt 'net.xkor.genaroid:compiler:1.2.5'
 }
 ```
 
