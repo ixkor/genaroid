@@ -196,12 +196,7 @@ public class GClass extends GElement {
                 if (parentClass != null && parentClass.isImplementedByProcessor(interfaceType)) {
                     parentClass.fixImplementation(interfaceType);
                     removeInterface(interfaceType);
-                    do {
-                        for (Symbol symbol : interfaceType.members().getElements(methodsFilter)) {
-                            overrideMethod((Symbol.MethodSymbol) symbol, false).appendSuperCall();
-                        }
-                        interfaceType = (Symbol.ClassSymbol) interfaceType.getSuperclass().asElement();
-                    } while (interfaceType != null);
+                    overrideInterfaceMethods(interfaceType);
                 }
             }
         }
@@ -229,6 +224,10 @@ public class GClass extends GElement {
         JCExpression jcInterface = getEnvironment().createParser(interfaceType.getQualifiedName().toString()).parseType();
         classDecl.implementing = classDecl.implementing.append(jcInterface);
 
+        overrideInterfaceMethods(interfaceType);
+    }
+
+    private void overrideInterfaceMethods(Symbol.ClassSymbol interfaceType) {
         do {
             for (Symbol symbol : interfaceType.members().getElements(methodsFilter)) {
                 overrideMethod((Symbol.MethodSymbol) symbol, false);
@@ -236,34 +235,6 @@ public class GClass extends GElement {
             interfaceType = (Symbol.ClassSymbol) interfaceType.getSuperclass().asElement();
         } while (interfaceType != null);
     }
-
-//    public GMethod createOrGetMethod(long modifiers, String name, String type, List<JCVariableDecl> params) {
-//        TreeMaker maker = getEnvironment().getMaker();
-//        JavacElements utils = getEnvironment().getUtils();
-//        JCExpression returnType = getEnvironment().getVoidType();
-//        if (type != null) {
-//            returnType = getEnvironment().createParser(type).parseType();
-//        }
-//        JCMethodDecl methodDecl = maker.MethodDef(
-//                maker.Modifiers(modifiers),
-//                utils.getName(name),
-//                returnType,
-//                List.<JCTypeParameter>nil(),
-//                params,
-//                List.<JCExpression>nil(),
-//                maker.Block(0, List.<JCStatement>nil()),
-//                null);
-//
-//        GMethod method = (GMethod) getMember(memberSignature);
-//        if (method == null) {
-//            method = new GMethod(this, methodDecl, null);
-//            method.setName(name);
-//            putMember(method);
-//            classDecl.defs = classDecl.defs.append(methodDecl);
-//        }
-//
-//        return method;
-//    }
 
     public boolean isImplementedByProcessor(Symbol.ClassSymbol interfaceType) {
         String interfaceName = interfaceType.getQualifiedName().toString();
