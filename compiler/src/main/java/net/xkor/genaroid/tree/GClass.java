@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Aleksei Skoriatin
+ * Copyright (C) 2016 Aleksei Skoriatin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -340,7 +340,7 @@ public class GClass extends GElement {
         Symbol.ClassSymbol currentClass = getElement();
         while (currentClass != null) {
             currentClass = (Symbol.ClassSymbol) currentClass.getSuperclass().asElement();
-            if (currentClass != null && currentClass.getAnnotation(annotationClass) != null) {
+            if (currentClass != null && ((Element) currentClass).getAnnotation(annotationClass) != null) {
                 result = false;
                 break;
             }
