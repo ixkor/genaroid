@@ -3,7 +3,7 @@ apply plugin: 'com.neenbedankt.android-apt'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion "23.0.1"
+    buildToolsVersion "23.0.2"
 
     defaultConfig {
         applicationId "net.xkor.genaroid.example"
@@ -14,10 +14,10 @@ android {
 
 dependencies {
     //noinspection GradleDynamicVersion
-    compile 'net.xkor.genaroid:core:+'
+    compile 'net.xkor.genaroid:core:2.+'
     //noinspection GradleDynamicVersion
-    apt 'net.xkor.genaroid:compiler:+'
-    compile 'com.android.support:appcompat-v7:23.0.1'
+    apt 'net.xkor.genaroid:compiler:2.+'
+    compile 'com.android.support:appcompat-v7:23.1.1'
 }
 
 apt {

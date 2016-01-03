@@ -1,8 +1,8 @@
-repositories {
-    Properties properties = new Properties()
-    properties.load(project.rootProject.file('local.properties').newDataInputStream())
-    def sdkDir = properties.getProperty('sdk.dir')
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+def sdkDir = properties.getProperty('sdk.dir')
 
+repositories {
     maven {
         url "$sdkDir/extras/android/m2repository/"
     }
@@ -20,7 +20,15 @@ sourceSets {
 dependencies {
     compile files("${System.properties['java.home']}/../lib/tools.jar")
     compile 'com.squareup:javapoet:1.2.0'
-    compile 'com.android.support:support-annotations:23.0.1'
+    compile 'com.android.support:support-annotations:23.1.1'
+}
+
+javadoc {
+    options {
+        links "http://docs.oracle.com/javase/7/docs/api/"
+        linksOffline "http://d.android.com/reference", "$sdkDir/docs/reference"
+    }
+    failOnError false
 }
 
 task javadocJar(type: Jar) {

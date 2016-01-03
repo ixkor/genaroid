@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Aleksei Skoriatin
+ * Copyright (C) 2016 Aleksei Skoriatin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,8 +68,8 @@ public class ListenersProcessor implements SubProcessor {
         HashMap<String, GClass> listeners = new HashMap<>();
         Collection<Symbol.ClassSymbol> annotations = getListenerAnnotations(environment);
         for (Symbol.ClassSymbol annotationSymbol : annotations) {
-            CustomListener customListener = annotationSymbol.getAnnotation(CustomListener.class);
-            Target target = annotationSymbol.getAnnotation(Target.class);
+            CustomListener customListener = ((Element) annotationSymbol).getAnnotation(CustomListener.class);
+            Target target = ((Element) annotationSymbol).getAnnotation(Target.class);
             boolean validAnnotation = true;
             if (target == null || target.value().length != 1 || target.value()[0] != ElementType.METHOD) {
                 environment.getMessager().printMessage(Diagnostic.Kind.ERROR,

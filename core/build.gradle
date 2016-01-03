@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.neenbedankt.android-apt'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
 apply plugin: 'com.jfrog.bintray'
@@ -17,8 +18,10 @@ android {
 }
 
 dependencies {
-    provided 'com.android.support:support-v4:23.0.1'
-    provided 'com.android.support:support-annotations:23.0.1'
+    provided 'com.android.support:support-v4:23.1.1'
+    provided 'com.android.support:support-annotations:23.1.1'
+    //noinspection GradleDynamicVersion
+    apt 'net.xkor.genaroid:compiler:+'
 }
 
 task sourcesJar(type: Jar) {
@@ -26,10 +29,23 @@ task sourcesJar(type: Jar) {
     classifier = 'sources'
 }
 
+afterEvaluate {
+    javadoc.classpath += files(android.libraryVariants.collect { variant ->
+        variant.javaCompile.classpath.files
+    })
+}
+
 task javadoc(type: Javadoc) {
     source = android.sourceSets.main.java.srcDirs
-    exclude '**/internal/**'
+    exclude '**/BuildConfig.java'
+    exclude '**/R.java'
+
     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    options {
+        links "http://docs.oracle.com/javase/7/docs/api/"
+        linksOffline "http://d.android.com/reference", "${android.sdkDirectory}/docs/reference"
+    }
+    failOnError false
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
