@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Aleksei Skoriatin
+ * Copyright (C) 2016 Aleksei Skoriatin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,9 @@ import com.sun.tools.javac.api.JavacTrees;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
+import com.sun.tools.javac.file.JavacFileManager;
+import com.sun.tools.javac.main.JavaCompiler;
+import com.sun.tools.javac.main.OptionName;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.model.JavacTypes;
 import com.sun.tools.javac.parser.Parser;
@@ -32,6 +35,7 @@ import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCModifiers;
 import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.List;
+import com.sun.tools.javac.util.Options;
 import com.sun.tools.javac.util.Pair;
 
 import net.xkor.genaroid.tree.GClass;
@@ -40,25 +44,42 @@ import net.xkor.genaroid.tree.GField;
 import net.xkor.genaroid.tree.GMethod;
 import net.xkor.genaroid.tree.GUnit;
 
+import java.io.CharArrayReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URI;
+import java.nio.CharBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.NestingKind;
 import javax.lang.model.type.TypeKind;
+import javax.tools.JavaFileManager;
+import javax.tools.JavaFileObject;
 
 public class GenaroidEnvironment {
     public static final String GENAROID_MAIN_CLASS = "net.xkor.genaroid.Genaroid";
     public static final String DEBUG_MODE_OPTION_NAME = "genaroidDebugMode";
-
+    public static final String SAVE_TEMPLATES_OPTION_NAME = "saveTemplates";
+    public static final String PROJECT_PATH_OPTION_NAME = "projectPath";
+    private static final Pattern S_OPTION_MATCHER = Pattern.compile("$(.*)[/\\\\]build[/\\\\]generated[/\\\\]source[/\\\\]apt[/\\\\](\\w+)^");
     private JavacProcessingEnvironment javacProcessingEnv;
     private RoundEnvironment roundEnvironment;
     private TreeMaker maker;
@@ -68,6 +89,8 @@ public class GenaroidEnvironment {
     private JavacTrees trees;
     private JavacTypes typeUtils;
     private Types types;
+    private JavaCompiler compiler;
+    private JavacFileManager javacFileManager;
 
     private JCExpression voidType;
     private Symbol.ClassSymbol objectClass;
@@ -76,6 +99,9 @@ public class GenaroidEnvironment {
     private java.util.List<GClass> fragments;
     private java.util.List<GClass> activities;
     private boolean debugMode;
+    private boolean saveTemplates;
+    private String projectPath;
+    private String buildVariant;
 
     public void init(ProcessingEnvironment procEnv) {
         javacProcessingEnv = (JavacProcessingEnvironment) procEnv;
@@ -85,11 +111,25 @@ public class GenaroidEnvironment {
         typeUtils = javacProcessingEnv.getTypeUtils();
         trees = JavacTrees.instance(javacProcessingEnv);
         types = Types.instance(javacProcessingEnv.getContext());
+        compiler = JavaCompiler.instance(javacProcessingEnv.getContext());
+        javacFileManager = (JavacFileManager) javacProcessingEnv.getContext().get(JavaFileManager.class);
 
         voidType = maker.Type((Type) typeUtils.getNoType(TypeKind.VOID));
         objectClass = utils.getTypeElement("java.lang.Object");
 
         debugMode = Boolean.parseBoolean(javacProcessingEnv.getOptions().get(DEBUG_MODE_OPTION_NAME));
+        saveTemplates = Boolean.parseBoolean(javacProcessingEnv.getOptions().get(SAVE_TEMPLATES_OPTION_NAME));
+        projectPath = javacProcessingEnv.getOptions().get(PROJECT_PATH_OPTION_NAME);
+        String s = Options.instance(javacProcessingEnv.getContext()).get(OptionName.S.optionName);
+        if (s != null && s.length() != 0) {
+            Matcher matcher = S_OPTION_MATCHER.matcher(s);
+            if (matcher.find()) {
+                if (projectPath == null || projectPath.length() == 0) {
+                    projectPath = matcher.group(0);
+                }
+                buildVariant = matcher.group(1);
+            }
+        }
 
         // reflection
         try {
@@ -204,6 +244,10 @@ public class GenaroidEnvironment {
         return createParser(String.format(code, args)).parseExpression();
     }
 
+    public JCCompilationUnit parseUnit(String source) {
+        return compiler.parse(new MemoryJavaFileObject(source));
+    }
+
     public JavacTypes getTypeUtils() {
         return typeUtils;
     }
@@ -262,5 +306,98 @@ public class GenaroidEnvironment {
 
     public void setActivities(java.util.List<GClass> activities) {
         this.activities = activities;
+    }
+
+    public boolean isSaveTemplates() {
+        return saveTemplates;
+    }
+
+    public String getBuildVariant() {
+        return buildVariant;
+    }
+
+    public String getProjectPath() {
+        return projectPath;
+    }
+
+    private class MemoryJavaFileObject implements JavaFileObject {
+        private String source;
+
+        public MemoryJavaFileObject(String source) {
+            this.source = source;
+        }
+
+        @Override
+        public Kind getKind() {
+            return Kind.SOURCE;
+        }
+
+        @Override
+        public boolean isNameCompatible(String simpleName, Kind kind) {
+            return false;
+        }
+
+        @Override
+        public NestingKind getNestingKind() {
+            return null;
+        }
+
+        @Override
+        public Modifier getAccessLevel() {
+            return null;
+        }
+
+        @Override
+        public URI toUri() {
+            return null;
+        }
+
+        @Override
+        public String getName() {
+            return null;
+        }
+
+        @Override
+        public InputStream openInputStream() throws IOException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public OutputStream openOutputStream() throws IOException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Reader openReader(boolean ignoreEncodingErrors) throws IOException {
+            CharSequence charContent = getCharContent(ignoreEncodingErrors);
+            if (charContent == null)
+                throw new UnsupportedOperationException();
+            if (charContent instanceof CharBuffer) {
+                CharBuffer buffer = (CharBuffer) charContent;
+                if (buffer.hasArray())
+                    return new CharArrayReader(buffer.array());
+            }
+            return new StringReader(charContent.toString());
+        }
+
+        @Override
+        public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
+            return source;
+        }
+
+        @Override
+        public Writer openWriter() throws IOException {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public long getLastModified() {
+            return 0;
+        }
+
+        @Override
+        public boolean delete() {
+            return false;
+        }
     }
 }

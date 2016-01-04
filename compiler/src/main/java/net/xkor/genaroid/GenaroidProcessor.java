@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Aleksei Skoriatin
+ * Copyright (C) 2016 Aleksei Skoriatin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ import net.xkor.genaroid.tree.GUnit;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -121,6 +121,9 @@ public class GenaroidProcessor extends AbstractProcessor {
 
     @Override
     public Set<String> getSupportedOptions() {
-        return Collections.singleton(GenaroidEnvironment.DEBUG_MODE_OPTION_NAME);
+        return new HashSet<>(Arrays.asList(
+                GenaroidEnvironment.DEBUG_MODE_OPTION_NAME,
+                GenaroidEnvironment.PROJECT_PATH_OPTION_NAME,
+                GenaroidEnvironment.SAVE_TEMPLATES_OPTION_NAME));
     }
 }
