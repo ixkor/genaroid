@@ -14,27 +14,23 @@
  * limitations under the License.
  */
 
-import android.os.Bundle;
-import android.os.Parcelable;
-import android.view.View;
-
 import net.xkor.genaroid.internal.Restorable;
 
 class InstanceStateParcelableArrayTemplate implements Restorable {
     private static final String KEY_$FIELD_NAME$ = "key_$FIELD_NAME$";
 
-    Parcelable[] $field$;
+    android.os.Parcelable[] $field$;
 
     @Override
-    public void _gen_saveInstanceState(Bundle outState) {
+    public void _gen_saveInstanceState(android.os.Bundle outState) {
         $methodBody$();
         param0.$betterBundlePutter$(KEY_$FIELD_NAME$, $field$);
     }
 
     @Override
-    public void _gen_restoreInstanceState(Bundle savedState) {
+    public void _gen_restoreInstanceState(android.os.Bundle savedState) {
         $methodBody$();
-        $field$ = net.xkor.genaroid.Utils.castParcelableArray($fieldClass$.class, savedState.getParcelableArray(KEY_$FIELD_NAME$));
+        $field$ = net.xkor.genaroid.Utils.castParcelableArray($fieldType$.class, savedState.getParcelableArray(KEY_$FIELD_NAME$));
     }
 }
 
@@ -42,14 +38,14 @@ class InstanceStateTemplate implements Restorable {
     private static final String KEY_$FIELD_NAME$ = "key_$FIELD_NAME$";
 
     @Override
-    public void _gen_saveInstanceState(Bundle outState) {
+    public void _gen_saveInstanceState(android.os.Bundle outState) {
         $methodBody$();
         param0.$betterBundlePutter$(KEY_$FIELD_NAME$, $field$);
     }
 
     @Override
-    public void _gen_restoreInstanceState(Bundle savedState) {
+    public void _gen_restoreInstanceState(android.os.Bundle savedState) {
         $methodBody$();
-        $field$ = ($fieldClass_ifCastNeeded$) savedState.$betterBundleGetter$(KEY_$FIELD_NAME$);
+        $field$ = ($fieldType_ifCastNeeded$) savedState.$betterBundleGetter$(KEY_$FIELD_NAME$);
     }
 }

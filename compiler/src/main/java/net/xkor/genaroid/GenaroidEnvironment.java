@@ -22,7 +22,6 @@ import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.file.JavacFileManager;
 import com.sun.tools.javac.main.JavaCompiler;
-import com.sun.tools.javac.main.OptionName;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.model.JavacTypes;
 import com.sun.tools.javac.parser.Parser;
@@ -79,7 +78,7 @@ public class GenaroidEnvironment {
     public static final String DEBUG_MODE_OPTION_NAME = "genaroidDebugMode";
     public static final String SAVE_TEMPLATES_OPTION_NAME = "saveTemplates";
     public static final String PROJECT_PATH_OPTION_NAME = "projectPath";
-    private static final Pattern S_OPTION_MATCHER = Pattern.compile("$(.*)[/\\\\]build[/\\\\]generated[/\\\\]source[/\\\\]apt[/\\\\](\\w+)^");
+    private static final Pattern S_OPTION_MATCHER = Pattern.compile("^(.*)[/\\\\]build[/\\\\]generated[/\\\\]source[/\\\\]apt[/\\\\](\\w+)$");
     private JavacProcessingEnvironment javacProcessingEnv;
     private RoundEnvironment roundEnvironment;
     private TreeMaker maker;
@@ -120,14 +119,14 @@ public class GenaroidEnvironment {
         debugMode = Boolean.parseBoolean(javacProcessingEnv.getOptions().get(DEBUG_MODE_OPTION_NAME));
         saveTemplates = Boolean.parseBoolean(javacProcessingEnv.getOptions().get(SAVE_TEMPLATES_OPTION_NAME));
         projectPath = javacProcessingEnv.getOptions().get(PROJECT_PATH_OPTION_NAME);
-        String s = Options.instance(javacProcessingEnv.getContext()).get(OptionName.S.optionName);
+        String s = Options.instance(javacProcessingEnv.getContext()).get("-s");
         if (s != null && s.length() != 0) {
             Matcher matcher = S_OPTION_MATCHER.matcher(s);
             if (matcher.find()) {
                 if (projectPath == null || projectPath.length() == 0) {
-                    projectPath = matcher.group(0);
+                    projectPath = matcher.group(1);
                 }
-                buildVariant = matcher.group(1);
+                buildVariant = matcher.group(2);
             }
         }
 

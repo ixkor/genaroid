@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Aleksei Skoriatin
+ * Copyright (C) 2016 Aleksei Skoriatin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,23 @@
  * limitations under the License.
  */
 
-package net.xkor.genaroid.processing;
+package net.xkor.genaroid.plugin;
 
 import net.xkor.genaroid.GenaroidEnvironment;
 
+import java.util.Collections;
 import java.util.Set;
 
-public interface SubProcessor {
-    void process(GenaroidEnvironment environment);
-    Set<String> getSupportedAnnotationTypes();
+public abstract class GenaroidPlugin {
+    public abstract void process(GenaroidEnvironment environment);
+
+    public abstract Set<String> getSupportedAnnotationTypes();
+
+    public Set<String> getPreviousPlugins() {
+        return Collections.emptySet();
+    }
+
+    public Set<String> getNextPlugins() {
+        return Collections.emptySet();
+    }
 }

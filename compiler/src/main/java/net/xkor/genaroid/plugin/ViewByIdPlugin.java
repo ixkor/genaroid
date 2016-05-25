@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Aleksei Skoriatin
+ * Copyright (C) 2016 Aleksei Skoriatin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package net.xkor.genaroid.processing;
+package net.xkor.genaroid.plugin;
 
+import com.google.auto.service.AutoService;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
@@ -33,7 +34,8 @@ import java.util.Set;
 
 import javax.tools.Diagnostic;
 
-public class ViewByIdProcessor implements SubProcessor {
+@AutoService(GenaroidPlugin.class)
+public class ViewByIdPlugin extends GenaroidPlugin {
     private static final String ANNOTATION_CLASS_NAME = ViewById.class.getCanonicalName();
 
     @Override

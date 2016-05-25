@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Aleksei Skoriatin
+ * Copyright (C) 2016 Aleksei Skoriatin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package net.xkor.genaroid.processing;
+package net.xkor.genaroid.plugin;
 
+import com.google.auto.service.AutoService;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
@@ -57,7 +58,8 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.tools.Diagnostic;
 
-public class BuildersProcessor implements SubProcessor {
+@AutoService(GenaroidPlugin.class)
+public class BuildersPlugin extends GenaroidPlugin {
     private static final String ANNOTATION_CLASS_NAME = BuilderParam.class.getCanonicalName();
     private static final ClassName CLASS_TYPE_NAME = ClassName.get("java.lang", "Class");
     private static final ClassName CONTEXT_TYPE_NAME = ClassName.get("android.content", "Context");

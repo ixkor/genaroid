@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package net.xkor.genaroid.processing;
+package net.xkor.genaroid.plugin;
 
+import com.google.auto.service.AutoService;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
@@ -46,7 +47,8 @@ import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.tools.Diagnostic;
 
-public class ListenersProcessor implements SubProcessor {
+@AutoService(GenaroidPlugin.class)
+public class ListenersPlugin extends GenaroidPlugin {
     private static final String ANNOTATION_CLASS_NAME = CustomListener.class.getCanonicalName();
     private static final String[] STANDARD_LISTENER_ANNOTATIONS = new String[]{
             "net.xkor.genaroid.annotations.OnClick",
@@ -236,6 +238,11 @@ public class ListenersProcessor implements SubProcessor {
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         return Collections.singleton(ANNOTATION_CLASS_NAME);
+    }
+
+    @Override
+    public Set<String> getPreviousPlugins() {
+        return Collections.singleton(ViewByIdPlugin.class.getCanonicalName());
     }
 
     private static class ListenerMethodFilter implements Filter<Symbol> {

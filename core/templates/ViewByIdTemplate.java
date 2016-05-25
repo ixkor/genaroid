@@ -14,19 +14,14 @@
  * limitations under the License.
  */
 
-import android.view.View;
-
-import net.xkor.genaroid.annotations.ViewById_Exp;
-import net.xkor.genaroid.internal.Bindable;
-
-class ViewByIdTemplate<$fieldClass$ extends View> implements Bindable {
-    $fieldClass$ $field$;
-    ViewById_Exp $annotation$;
+class ViewByIdTemplate<$fieldType$ extends android.view.View> implements net.xkor.genaroid.internal.Bindable {
+    $fieldType$ $field$;
+    net.xkor.genaroid.annotations.ViewById_Exp $annotation$;
 
     @Override
-    public void _gen_bind(View rootView) {
+    public void _gen_bind(android.view.View rootView) {
         $methodBody$();
-        $field$ = ($fieldClass$) rootView.findViewById($annotation$.value());
+        $field$ = ($fieldType$) rootView.findViewById($annotation$.value());
     }
 
     @Override

@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package net.xkor.genaroid.processing;
+package net.xkor.genaroid.plugin;
 
+import com.google.auto.service.AutoService;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
@@ -28,7 +29,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-public class ViewById_Exp_Processor extends BaseTemplateProcessor {
+@AutoService(GenaroidPlugin.class)
+public class ViewById_Exp_Plugin extends BaseTemplatePlugin {
     private static final String ANNOTATION_CLASS_NAME = ViewById_Exp.class.getCanonicalName();
 
     @Override
