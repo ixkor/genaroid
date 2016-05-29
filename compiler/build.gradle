@@ -15,6 +15,9 @@ sourceSets {
     main.java.srcDirs += "$projectDir/../common/src/main/java"
 }
 
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
 dependencies {
     compile files("${System.properties['java.home']}/../lib/tools.jar")
     compile 'com.squareup:javapoet:1.2.0'

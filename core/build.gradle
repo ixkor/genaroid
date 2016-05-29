@@ -12,6 +12,9 @@ android {
         minSdkVersion 11
     }
 
+    sourceCompatibility = 1.7
+    targetCompatibility = 1.7
+
     sourceSets {
         main.java.srcDirs += "$projectDir/../common/src/main/java"
     }
