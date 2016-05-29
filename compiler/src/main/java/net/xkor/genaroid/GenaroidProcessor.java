@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Aleksei Skoriatin
+ * Copyright (C) 2016 Aleksei Skoriatin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,7 +87,7 @@ public class GenaroidProcessor extends AbstractProcessor {
                         JavaFileObject source = processingEnv.getFiler().createSourceFile(
                                 unit.getCompilationUnit().getPackageName() + "." + unit.getName());
                         Writer writer = source.openWriter();
-                        writer.write(unit.getCompilationUnit().toString());
+                        writer.write(getUnitSourceString(unit));
                         writer.flush();
                         writer.close();
                         unit.getCompilationUnit().defs = List.nil();
@@ -103,6 +103,12 @@ public class GenaroidProcessor extends AbstractProcessor {
         }
 
         return true;
+    }
+
+    private String getUnitSourceString(GUnit unit) {
+        return unit.getCompilationUnit().toString()
+                // remove empty constructors
+                .replaceAll("\\s*(public|private)\\s+\\w*\\(\\)\\s*\\{\\s*super\\(\\);\\s*\\}", "");
     }
 
     @Override
