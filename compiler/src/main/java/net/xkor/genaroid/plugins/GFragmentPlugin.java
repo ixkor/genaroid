@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Aleksei Skoriatin
+ * Copyright (C) 2016 Aleksei Skoriatin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package net.xkor.genaroid.processing;
+package net.xkor.genaroid.plugins;
 
+import com.google.auto.service.AutoService;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
@@ -32,26 +33,32 @@ import net.xkor.genaroid.wrap.SupportFragmentWrapper;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 import javax.tools.Diagnostic;
 
-public class GFragmentProcessor implements SubProcessor {
+@AutoService(GenaroidPlugin.class)
+public class GFragmentPlugin extends GenaroidPlugin {
+
     private static final String ANNOTATION_CLASS_NAME = GFragment.class.getCanonicalName();
 
+    private ArrayList<GClass> sortedFragments;
+
+    public java.util.List<GClass> getFragments() {
+        return sortedFragments;
+    }
+
     @Override
-    public void process(GenaroidEnvironment environment) {
-        JavacElements utils = environment.getUtils();
+    public void process() {
+        JavacElements utils = getEnvironment().getUtils();
         Symbol.ClassSymbol instanceStateType = utils.getTypeElement(ANNOTATION_CLASS_NAME);
         BaseFragmentWrapper nativeFragmentWrapper = new FragmentWrapper(utils);
         BaseFragmentWrapper supportFragmentWrapper = new SupportFragmentWrapper(utils);
         InflatableWrapper inflatableWrapper = new InflatableWrapper(utils);
 
-        Set<GClass> fragments = environment.getGElementsAnnotatedWith(GFragment.class, GClass.class);
-        List<GClass> sortedFragments = new ArrayList<>(fragments);
+        Set<GClass> fragments = getEnvironment().getGElementsAnnotatedWith(GFragment.class, GClass.class);
+        sortedFragments = new ArrayList<>(fragments);
         Collections.sort(sortedFragments, GClass.HIERARCHY_LEVEL_COMPARATOR);
-        environment.setFragments(sortedFragments);
 
         for (GClass fragment : sortedFragments) {
             JCTree.JCAnnotation jcAnnotation = fragment.extractAnnotation(instanceStateType);
@@ -63,7 +70,7 @@ public class GFragmentProcessor implements SubProcessor {
             } else if (fragment.isSubClass(nativeFragmentWrapper.getClassSymbol())) {
                 fragmentWrapper = nativeFragmentWrapper;
             } else {
-                environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                getEnvironment().getMessager().printMessage(Diagnostic.Kind.ERROR,
                         "Annotation " + instanceStateType.getSimpleName() + " can be applied only to subclasses of Fragment",
                         fragment.getElement());
                 continue;
@@ -110,7 +117,7 @@ public class GFragmentProcessor implements SubProcessor {
                 if ((annotation.injectCalls() & InjectGenaroidCall.INFLATE_LAYOUT) != 0) {
                     GMethod onCreateViewMethod = fragment.overrideMethod(fragmentWrapper.getOnCreateViewMethod(), false);
                     if (onCreateViewMethod.getBody().size() > 0) {
-                        environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                        getEnvironment().getMessager().printMessage(Diagnostic.Kind.ERROR,
                                 "You can not override method onCreateView when the injectCalls parameter of GFragment annotation contains InjectGenaroidCall.INFLATE_LAYOUT value",
                                 fragment.getElement());
                         continue;

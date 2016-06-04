@@ -152,7 +152,7 @@ public class GClass extends GElement {
         return level;
     }
 
-    public boolean isSubClass(Symbol.ClassSymbol base) {
+    public boolean isSubClass(Symbol.TypeSymbol base) {
         return getElement().isSubClass(base, getEnvironment().getTypes());
     }
 

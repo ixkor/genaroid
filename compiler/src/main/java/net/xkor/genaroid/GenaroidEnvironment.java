@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Aleksei Skoriatin
+ * Copyright (C) 2016 Aleksei Skoriatin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,8 +73,6 @@ public class GenaroidEnvironment {
     private Symbol.ClassSymbol objectClass;
 
     private HashMap<String, GUnit> units = new HashMap<>();
-    private java.util.List<GClass> fragments;
-    private java.util.List<GClass> activities;
     private boolean debugMode;
 
     public void init(ProcessingEnvironment procEnv) {
@@ -248,19 +246,4 @@ public class GenaroidEnvironment {
         return objectClass;
     }
 
-    public java.util.List<GClass> getFragments() {
-        return fragments;
-    }
-
-    public void setFragments(java.util.List<GClass> fragments) {
-        this.fragments = fragments;
-    }
-
-    public java.util.List<GClass> getActivities() {
-        return activities;
-    }
-
-    public void setActivities(java.util.List<GClass> activities) {
-        this.activities = activities;
-    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Aleksei Skoriatin
+ * Copyright (C) 2016 Aleksei Skoriatin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package net.xkor.genaroid.processing;
+package net.xkor.genaroid.plugins;
 
+import com.google.auto.service.AutoService;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
@@ -57,7 +58,9 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.tools.Diagnostic;
 
-public class BuildersProcessor implements SubProcessor {
+@AutoService(GenaroidPlugin.class)
+@GenaroidPlugin.Dependencies({GActivityPlugin.class, GFragmentPlugin.class})
+public class BuildersPlugin extends GenaroidPlugin {
     private static final String ANNOTATION_CLASS_NAME = BuilderParam.class.getCanonicalName();
     private static final ClassName CLASS_TYPE_NAME = ClassName.get("java.lang", "Class");
     private static final ClassName CONTEXT_TYPE_NAME = ClassName.get("android.content", "Context");
@@ -71,10 +74,19 @@ public class BuildersProcessor implements SubProcessor {
     private Symbol.ClassSymbol supportFragmentBuilderClass;
     private Symbol.ClassSymbol intentBaseBuilderWrapperClass;
     private Symbol.ClassSymbol fragmentBuilderClass;
+    private GActivityPlugin activityPlugin;
+    private GFragmentPlugin fragmentPlugin;
 
     @Override
-    public void process(GenaroidEnvironment environment) {
-        JavacElements utils = environment.getUtils();
+    protected void init() {
+        super.init();
+        activityPlugin = getPluginsManager().getPlugin(GActivityPlugin.class);
+        fragmentPlugin = getPluginsManager().getPlugin(GFragmentPlugin.class);
+    }
+
+    @Override
+    public void process() {
+        JavacElements utils = getEnvironment().getUtils();
         Symbol.ClassSymbol annotationClass = utils.getTypeElement(ANNOTATION_CLASS_NAME);
         intentBaseBuilderWrapperClass = utils.getTypeElement("net.xkor.genaroid.builders.IntentBaseBuilder");
         fragmentBuilderClass = utils.getTypeElement("net.xkor.genaroid.builders.FragmentBuilder");
@@ -82,22 +94,22 @@ public class BuildersProcessor implements SubProcessor {
         activityWrapper = new ActivityWrapper(utils);
         nativeFragmentWrapper = new FragmentWrapper(utils);
         supportFragmentWrapper = new SupportFragmentWrapper(utils);
-        BundleWrapper bundleWrapper = new BundleWrapper(environment);
+        BundleWrapper bundleWrapper = new BundleWrapper(getEnvironment());
         ParameterizableWrapper parameterizableWrapper = new ParameterizableWrapper(utils);
 
         HashMap<Symbol.ClassSymbol, BuilderClass> builders = new HashMap<>();
 
         ArrayList<GClass> classesForBuilders = new ArrayList<>();
-        if (environment.getActivities() != null) {
-            classesForBuilders.addAll(environment.getActivities());
+        if (activityPlugin.getActivities() != null) {
+            classesForBuilders.addAll(activityPlugin.getActivities());
         }
-        if (environment.getFragments() != null) {
-            classesForBuilders.addAll(environment.getFragments());
+        if (fragmentPlugin.getFragments() != null) {
+            classesForBuilders.addAll(fragmentPlugin.getFragments());
         }
         for (GClass gClass : classesForBuilders) {
             Symbol.ClassSymbol currentClass = gClass.getElement();
             BuilderClass superBuilder = null;
-            while (currentClass != environment.getObjectClass() && superBuilder == null) {
+            while (currentClass != getEnvironment().getObjectClass() && superBuilder == null) {
                 currentClass = (Symbol.ClassSymbol) currentClass.getSuperclass().asElement();
                 superBuilder = builders.get(currentClass);
             }
@@ -107,7 +119,7 @@ public class BuildersProcessor implements SubProcessor {
             builders.put(gClass.getElement(), builder);
         }
 
-        Set<GField> allFields = environment.getGElementsAnnotatedWith(BuilderParam.class, GField.class);
+        Set<GField> allFields = getEnvironment().getGElementsAnnotatedWith(BuilderParam.class, GField.class);
         List<GField> sortedFields = new ArrayList<>(allFields);
         Collections.sort(sortedFields, new Comparator<GField>() {
             @Override
@@ -135,7 +147,7 @@ public class BuildersProcessor implements SubProcessor {
             Symbol.ClassSymbol fieldClassSymbol = field.getGClass().getElement();
             BuilderClass builder = builders.get(fieldClassSymbol);
             if (builder == null) {
-                environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                getEnvironment().getMessager().printMessage(Diagnostic.Kind.ERROR,
                         "Annotation " + annotationClass.getSimpleName() + " can be applied only to fields of classes annotated by GFragment or GActivity",
                         field.getElement());
                 continue;
@@ -150,7 +162,7 @@ public class BuildersProcessor implements SubProcessor {
 
             Symbol.MethodSymbol putMethod = bundleWrapper.getMethodForType(fieldType, false);
             if (putMethod == null) {
-                environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                getEnvironment().getMessager().printMessage(Diagnostic.Kind.ERROR,
                         "Can't found getter and putter for type of field " + field.getName(),
                         field.getElement());
                 continue;
@@ -161,7 +173,7 @@ public class BuildersProcessor implements SubProcessor {
         }
 
         for (BuilderClass builder : builders.values()) {
-            builder.writeToFile(environment);
+            builder.writeToFile(getEnvironment());
         }
     }
 

@@ -16,51 +16,39 @@
 
 package net.xkor.genaroid;
 
+import com.google.auto.service.AutoService;
 import com.sun.tools.javac.util.List;
 
-import net.xkor.genaroid.processing.BuildersProcessor;
-import net.xkor.genaroid.processing.GActivityProcessor;
-import net.xkor.genaroid.processing.GFragmentProcessor;
-import net.xkor.genaroid.processing.InstanceStateProcessor;
-import net.xkor.genaroid.processing.ListenersProcessor;
-import net.xkor.genaroid.processing.SubProcessor;
-import net.xkor.genaroid.processing.ViewByIdProcessor;
+import net.xkor.genaroid.plugins.GenaroidPlugin;
+import net.xkor.genaroid.plugins.PluginsManager;
 import net.xkor.genaroid.tree.GUnit;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 
+@AutoService(Processor.class)
 public class GenaroidProcessor extends AbstractProcessor {
     private int counter = 0;
     private GenaroidEnvironment genaroidEnvironment = new GenaroidEnvironment();
-    private ArrayList<SubProcessor> processors = new ArrayList<>();
-
-    public GenaroidProcessor() {
-        processors.clear();
-        processors.add(new GActivityProcessor());
-        processors.add(new GFragmentProcessor());
-        processors.add(new ViewByIdProcessor());
-        processors.add(new InstanceStateProcessor());
-        processors.add(new BuildersProcessor());
-        processors.add(new ListenersProcessor());
-    }
+    private PluginsManager pluginsManager;
 
     @Override
     public void init(ProcessingEnvironment procEnv) {
         super.init(procEnv);
         genaroidEnvironment.init(procEnv);
+        pluginsManager = new PluginsManager(genaroidEnvironment);
     }
 
     @Override
@@ -73,17 +61,20 @@ public class GenaroidProcessor extends AbstractProcessor {
 
         try {
             long startTime = System.currentTimeMillis();
-            for (SubProcessor processor : processors) {
-                processor.process(genaroidEnvironment);
+            for (GenaroidPlugin plugin : pluginsManager.getPlugins()) {
+                long pluginStartTime = System.currentTimeMillis();
+                plugin.process();
+                if (genaroidEnvironment.isDebugMode()) {
+                    long processTime = System.currentTimeMillis() - pluginStartTime;
+                    processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, plugin.getClass().getSimpleName() + " time: " + processTime + "ms");
+                }
             }
-            long processTime = System.currentTimeMillis() - startTime;
             if (genaroidEnvironment.isDebugMode()) {
-                processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Genaroid time: " + processTime + "ms");
-            }
+                long processTime = System.currentTimeMillis() - startTime;
+                processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, "Genaroid process time: " + processTime + "ms");
 
-            for (GUnit unit : genaroidEnvironment.getUnits()) {
-                try {
-                    if (genaroidEnvironment.isDebugMode()) {
+                for (GUnit unit : genaroidEnvironment.getUnits()) {
+                    try {
                         JavaFileObject source = processingEnv.getFiler().createSourceFile(
                                 unit.getCompilationUnit().getPackageName() + "." + unit.getName());
                         Writer writer = source.openWriter();
@@ -91,14 +82,13 @@ public class GenaroidProcessor extends AbstractProcessor {
                         writer.flush();
                         writer.close();
                         unit.getCompilationUnit().defs = List.nil();
+                    } catch (IOException error) {
+                        processingEnv.getMessager().printMessage(Diagnostic.Kind.WARNING, Utils.getStackTrace(error));
                     }
-                } catch (IOException e1) {
-                    e1.printStackTrace();
                 }
             }
         } catch (Throwable e) {
-            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, e.toString());
-            e.printStackTrace();
+            processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR, Utils.getStackTrace(e));
             return false;
         }
 
@@ -114,7 +104,7 @@ public class GenaroidProcessor extends AbstractProcessor {
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         HashSet<String> types = new HashSet<>();
-        for (SubProcessor processor : processors) {
+        for (GenaroidPlugin processor : pluginsManager.getPlugins()) {
             types.addAll(processor.getSupportedAnnotationTypes());
         }
         return types;

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Aleksei Skoriatin
+ * Copyright (C) 2016 Aleksei Skoriatin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package net.xkor.genaroid.processing;
+package net.xkor.genaroid.plugins;
 
+import com.google.auto.service.AutoService;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
@@ -30,32 +31,37 @@ import net.xkor.genaroid.wrap.InflatableWrapper;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 
 import javax.tools.Diagnostic;
 
-public class GActivityProcessor implements SubProcessor {
+@AutoService(GenaroidPlugin.class)
+public class GActivityPlugin extends GenaroidPlugin {
+
     private static final String ANNOTATION_CLASS_NAME = GActivity.class.getCanonicalName();
+    private ArrayList<GClass> sortedActivities;
+
+    public java.util.List<GClass> getActivities() {
+        return sortedActivities;
+    }
 
     @Override
-    public void process(GenaroidEnvironment environment) {
-        JavacElements utils = environment.getUtils();
+    public void process() {
+        JavacElements utils = getEnvironment().getUtils();
         Symbol.ClassSymbol instanceStateType = utils.getTypeElement(ANNOTATION_CLASS_NAME);
         ActivityWrapper activityWrapper = new ActivityWrapper(utils);
         InflatableWrapper inflatableWrapper = new InflatableWrapper(utils);
 
-        Set<GClass> activities = environment.getGElementsAnnotatedWith(GActivity.class, GClass.class);
-        List<GClass> sortedActivities = new ArrayList<>(activities);
+        Set<GClass> activities = getEnvironment().getGElementsAnnotatedWith(GActivity.class, GClass.class);
+        sortedActivities = new ArrayList<>(activities);
         Collections.sort(sortedActivities, GClass.HIERARCHY_LEVEL_COMPARATOR);
-        environment.setActivities(sortedActivities);
 
         for (GClass activity : activities) {
             JCTree.JCAnnotation jcAnnotation = activity.extractAnnotation(instanceStateType);
             GActivity annotation = activity.getAnnotation(GActivity.class);
 
             if (!activity.isSubClass(activityWrapper.getClassSymbol())) {
-                environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                getEnvironment().getMessager().printMessage(Diagnostic.Kind.ERROR,
                         "Annotation " + instanceStateType.getSimpleName() + " can be applied only to subclasses of Activity",
                         activity.getElement());
                 continue;

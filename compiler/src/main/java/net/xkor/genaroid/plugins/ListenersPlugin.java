@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package net.xkor.genaroid.processing;
+package net.xkor.genaroid.plugins;
 
+import com.google.auto.service.AutoService;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
@@ -25,7 +26,6 @@ import com.sun.tools.javac.tree.TreeMaker;
 import com.sun.tools.javac.util.Filter;
 import com.sun.tools.javac.util.List;
 
-import net.xkor.genaroid.GenaroidEnvironment;
 import net.xkor.genaroid.annotations.CustomListener;
 import net.xkor.genaroid.tree.GClass;
 import net.xkor.genaroid.tree.GMethod;
@@ -46,7 +46,9 @@ import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.tools.Diagnostic;
 
-public class ListenersProcessor implements SubProcessor {
+@AutoService(GenaroidPlugin.class)
+@GenaroidPlugin.Dependencies(ViewByIdPlugin.class)
+public class ListenersPlugin extends GenaroidPlugin {
     private static final String ANNOTATION_CLASS_NAME = CustomListener.class.getCanonicalName();
     private static final String[] STANDARD_LISTENER_ANNOTATIONS = new String[]{
             "net.xkor.genaroid.annotations.OnClick",
@@ -58,21 +60,21 @@ public class ListenersProcessor implements SubProcessor {
     };
 
     @Override
-    public void process(GenaroidEnvironment environment) {
-        JavacElements utils = environment.getUtils();
-        Types types = environment.getTypes();
-        TreeMaker maker = environment.getMaker();
+    public void process() {
+        JavacElements utils = getEnvironment().getUtils();
+        Types types = getEnvironment().getTypes();
+        TreeMaker maker = getEnvironment().getMaker();
         BindableWrapper bindableWrapper = new BindableWrapper(utils);
-        PrimitiveType intType = environment.getTypeUtils().getPrimitiveType(TypeKind.INT);
+        PrimitiveType intType = getEnvironment().getTypeUtils().getPrimitiveType(TypeKind.INT);
 
         HashMap<String, GClass> listeners = new HashMap<>();
-        Collection<Symbol.ClassSymbol> annotations = getListenerAnnotations(environment);
+        Collection<Symbol.ClassSymbol> annotations = getListenerAnnotations();
         for (Symbol.ClassSymbol annotationSymbol : annotations) {
             CustomListener customListener = ((Element) annotationSymbol).getAnnotation(CustomListener.class);
             Target target = ((Element) annotationSymbol).getAnnotation(Target.class);
             boolean validAnnotation = true;
             if (target == null || target.value().length != 1 || target.value()[0] != ElementType.METHOD) {
-                environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                getEnvironment().getMessager().printMessage(Diagnostic.Kind.ERROR,
                         "Annotation " + annotationSymbol.getSimpleName() + " must be annotated by @Target(ElementType.METHOD)",
                         annotationSymbol);
                 validAnnotation = false;
@@ -80,7 +82,7 @@ public class ListenersProcessor implements SubProcessor {
             for (Symbol member : annotationSymbol.members().getElements()) {
                 if (member instanceof Symbol.MethodSymbol) {
                     if (!"value".equals(member.name.toString())) {
-                        environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                        getEnvironment().getMessager().printMessage(Diagnostic.Kind.ERROR,
                                 "Annotation " + annotationSymbol.getSimpleName() + " must has only value parameter",
                                 annotationSymbol);
                         validAnnotation = false;
@@ -88,7 +90,7 @@ public class ListenersProcessor implements SubProcessor {
 
                     Type returnType = member.type.asMethodType().getReturnType();
                     if (!types.isArray(returnType) || !types.elemtype(returnType).equals(intType)) {
-                        environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                        getEnvironment().getMessager().printMessage(Diagnostic.Kind.ERROR,
                                 "Annotation " + annotationSymbol.getSimpleName() + " must has value parameter with int[] type",
                                 annotationSymbol);
                         validAnnotation = false;
@@ -125,7 +127,7 @@ public class ListenersProcessor implements SubProcessor {
                 }
             }
             if (listenerSetter == null) {
-                environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                getEnvironment().getMessager().printMessage(Diagnostic.Kind.ERROR,
                         String.format("Can not found method %s(%s) in class %s", customListener.listenerSetterName(), listenerClassSymbol.getQualifiedName(), targetClassSymbol.getQualifiedName()),
                         annotationSymbol);
                 validAnnotation = false;
@@ -135,7 +137,7 @@ public class ListenersProcessor implements SubProcessor {
             ListenerMethodFilter listenerMethodFilter = new ListenerMethodFilter(customListener.listenerMethodName());
             for (Symbol member : listenerClassSymbol.members().getElements(listenerMethodFilter)) {
                 if (listenerMethod != null) {
-                    environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                    getEnvironment().getMessager().printMessage(Diagnostic.Kind.ERROR,
                             String.format("Listener class %s contains more one method, please specify method by a listenerSetterName parameter", listenerClassSymbol.getQualifiedName()),
                             annotationSymbol);
                     validAnnotation = false;
@@ -143,7 +145,7 @@ public class ListenersProcessor implements SubProcessor {
                 listenerMethod = (Symbol.MethodSymbol) member;
             }
             if (listenerMethod == null) {
-                environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                getEnvironment().getMessager().printMessage(Diagnostic.Kind.ERROR,
                         String.format("Listener class %s doesn't contains one method %s", listenerClassSymbol.getQualifiedName(), customListener.listenerSetterName()),
                         annotationSymbol);
                 validAnnotation = false;
@@ -153,7 +155,7 @@ public class ListenersProcessor implements SubProcessor {
                 continue;
             }
 
-            Set<GMethod> methods = environment.getGElementsAnnotatedWith(annotationSymbol, GMethod.class);
+            Set<GMethod> methods = getEnvironment().getGElementsAnnotatedWith(annotationSymbol, GMethod.class);
 
             for (GMethod method : methods) {
                 JCTree.JCAnnotation annotation = method.extractAnnotation(annotationSymbol);
@@ -180,7 +182,7 @@ public class ListenersProcessor implements SubProcessor {
                         listenerImplementor = method.getGClass().getGUnit().createAnonymousClass(method.getGClass().getClassDecl());
                         listenerImplementor.implement(listenerClassSymbol);
                         listeners.put(listenerVarName, listenerImplementor);
-                        JCTree.JCExpression listenerType = environment.typeToTree(listenerClassSymbol);
+                        JCTree.JCExpression listenerType = getEnvironment().typeToTree(listenerClassSymbol);
                         JCTree.JCVariableDecl listenerStatement = maker.VarDef(maker.Modifiers(0),
                                 utils.getName(listenerVarName), listenerType,
                                 maker.NewClass(null, null, listenerType, List.<JCTree.JCExpression>nil(), listenerImplementor.getTree()));
@@ -205,7 +207,7 @@ public class ListenersProcessor implements SubProcessor {
                         }
                         allParamsFound &= found;
                         if (!found) {
-                            environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                            getEnvironment().getMessager().printMessage(Diagnostic.Kind.ERROR,
                                     "Can not found listener parameter with type " + param.asType().toString(),
                                     method.getElement());
                         }
@@ -217,17 +219,17 @@ public class ListenersProcessor implements SubProcessor {
             }
         }
 
-        for (GClass gClass : environment.getClasses()) {
+        for (GClass gClass : getEnvironment().getClasses()) {
             gClass.fixImplementation(bindableWrapper.getClassSymbol());
         }
     }
 
-    private HashSet<Symbol.ClassSymbol> getListenerAnnotations(GenaroidEnvironment environment) {
+    private HashSet<Symbol.ClassSymbol> getListenerAnnotations() {
         HashSet<Symbol.ClassSymbol> annotations = new HashSet<>();
         for (String annotationName : STANDARD_LISTENER_ANNOTATIONS) {
-            annotations.add(environment.getUtils().getTypeElement(annotationName));
+            annotations.add(getEnvironment().getUtils().getTypeElement(annotationName));
         }
-        for (Element element : environment.getRoundEnvironment().getElementsAnnotatedWith(CustomListener.class)) {
+        for (Element element : getEnvironment().getRoundEnvironment().getElementsAnnotatedWith(CustomListener.class)) {
             annotations.add((Symbol.ClassSymbol) element);
         }
         return annotations;

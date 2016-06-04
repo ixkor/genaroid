@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Aleksei Skoriatin
+ * Copyright (C) 2016 Aleksei Skoriatin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package net.xkor.genaroid.processing;
+package net.xkor.genaroid.plugins;
 
+import com.google.auto.service.AutoService;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.model.JavacElements;
 import com.sun.tools.javac.tree.JCTree;
 
-import net.xkor.genaroid.GenaroidEnvironment;
 import net.xkor.genaroid.annotations.InstanceState;
 import net.xkor.genaroid.tree.GField;
 import net.xkor.genaroid.tree.GMethod;
@@ -34,18 +34,19 @@ import java.util.Set;
 
 import javax.tools.Diagnostic;
 
-public class InstanceStateProcessor implements SubProcessor {
+@AutoService(GenaroidPlugin.class)
+public class InstanceStatePlugin extends GenaroidPlugin {
     private static final String ANNOTATION_CLASS_NAME = InstanceState.class.getCanonicalName();
 
     @Override
-    public void process(GenaroidEnvironment environment) {
-        JavacElements utils = environment.getUtils();
-        Types types = environment.getTypes();
+    public void process() {
+        JavacElements utils = getEnvironment().getUtils();
+        Types types = getEnvironment().getTypes();
         Symbol.ClassSymbol instanceStateType = utils.getTypeElement(ANNOTATION_CLASS_NAME);
-        BundleWrapper bundleWrapper = new BundleWrapper(environment);
+        BundleWrapper bundleWrapper = new BundleWrapper(getEnvironment());
         RestorableWrapper restorableWrapper = new RestorableWrapper(utils);
 
-        Set<GField> allFields = environment.getGElementsAnnotatedWith(InstanceState.class, GField.class);
+        Set<GField> allFields = getEnvironment().getGElementsAnnotatedWith(InstanceState.class, GField.class);
         for (GField field : allFields) {
             JCTree.JCAnnotation annotation = field.extractAnnotation(instanceStateType);
             Type fieldType = ((Symbol.VarSymbol) field.getElement()).asType();
@@ -54,7 +55,7 @@ public class InstanceStateProcessor implements SubProcessor {
             String fieldNameInBundle = "_gen_" + field.getGClass().getName() + "_" + field.getName();
 
             if (putMethod == null || getMethod == null) {
-                environment.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                getEnvironment().getMessager().printMessage(Diagnostic.Kind.ERROR,
                         "Can't found getter and putter for type of field " + field.getName(),
                         field.getElement());
                 continue;
