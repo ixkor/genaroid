@@ -16,6 +16,8 @@
 
 package net.xkor.genaroid.plugins;
 
+import android.support.annotation.NonNull;
+
 import com.google.auto.service.AutoService;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.model.JavacElements;
@@ -112,6 +114,7 @@ public class GActivityPlugin extends GenaroidPlugin {
         }
     }
 
+    @NonNull
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         return Collections.singleton(ANNOTATION_CLASS_NAME);

@@ -16,6 +16,8 @@
 
 package net.xkor.genaroid.plugins;
 
+import android.support.annotation.NonNull;
+
 import com.google.auto.service.AutoService;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.model.JavacElements;
@@ -24,21 +26,31 @@ import com.sun.tools.javac.tree.JCTree.JCAssign;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 
 import net.xkor.genaroid.annotations.ViewById;
+import net.xkor.genaroid.tree.GClass;
 import net.xkor.genaroid.tree.GField;
 import net.xkor.genaroid.wrap.BindableWrapper;
 import net.xkor.genaroid.wrap.ViewWrapper;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import javax.tools.Diagnostic;
 
 @AutoService(GenaroidPlugin.class)
 public class ViewByIdPlugin extends GenaroidPlugin {
+
     private static final String ANNOTATION_CLASS_NAME = ViewById.class.getCanonicalName();
+
+    private Map<GClass, Map<String, GField>> fieldsMap = new HashMap<>();
 
     @Override
     public void process() {
+        fieldsMap.clear();
+
         JavacElements utils = getEnvironment().getUtils();
         Symbol.ClassSymbol viewByIdType = utils.getTypeElement(ANNOTATION_CLASS_NAME);
         ViewWrapper viewWrapper = new ViewWrapper(utils);
@@ -64,9 +76,26 @@ public class ViewByIdPlugin extends GenaroidPlugin {
                     .prependCode("this.%s = (%s) $p0.findViewById(%s);", field.getName(), fieldType, value);
             field.getGClass().overrideMethod(bindableWrapper.getUnbindMethod(), true)
                     .prependCode("this.%s = null;", field.getName());
+
+            Map<String, GField> classFieldsMap = fieldsMap.get(field.getGClass());
+            if (classFieldsMap == null) {
+                classFieldsMap = new HashMap<>();
+                fieldsMap.put(field.getGClass(), classFieldsMap);
+            }
+            classFieldsMap.put(value.toString(), field);
         }
     }
 
+    @Nullable
+    public GField findFieldForResource(GClass gClass, String resource) {
+        Map<String, GField> classFieldsMap = fieldsMap.get(gClass);
+        if (classFieldsMap != null) {
+            return classFieldsMap.get(resource);
+        }
+        return null;
+    }
+
+    @NonNull
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         return Collections.singleton(ANNOTATION_CLASS_NAME);

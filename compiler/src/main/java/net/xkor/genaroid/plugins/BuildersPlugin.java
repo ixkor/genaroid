@@ -16,6 +16,8 @@
 
 package net.xkor.genaroid.plugins;
 
+import android.support.annotation.NonNull;
+
 import com.google.auto.service.AutoService;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.JavaFile;
@@ -80,8 +82,8 @@ public class BuildersPlugin extends GenaroidPlugin {
     @Override
     protected void init() {
         super.init();
-        activityPlugin = getPluginsManager().getPlugin(GActivityPlugin.class);
-        fragmentPlugin = getPluginsManager().getPlugin(GFragmentPlugin.class);
+        activityPlugin = getPlugin(GActivityPlugin.class);
+        fragmentPlugin = getPlugin(GFragmentPlugin.class);
     }
 
     @Override
@@ -177,6 +179,7 @@ public class BuildersPlugin extends GenaroidPlugin {
         }
     }
 
+    @NonNull
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         return Collections.singleton(ANNOTATION_CLASS_NAME);

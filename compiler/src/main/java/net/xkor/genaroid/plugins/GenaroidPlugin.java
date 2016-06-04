@@ -16,7 +16,12 @@
 
 package net.xkor.genaroid.plugins;
 
+import android.support.annotation.NonNull;
+
 import net.xkor.genaroid.GenaroidEnvironment;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -26,23 +31,26 @@ import java.util.Set;
 
 public abstract class GenaroidPlugin {
 
+    @NotNull
     private final Set<Class<? extends GenaroidPlugin>> dependencies = new HashSet<>();
     private PluginsManager pluginsManager;
     private GenaroidEnvironment environment;
 
     public abstract void process();
 
+    @NonNull
     public abstract Set<String> getSupportedAnnotationTypes();
 
+    @NonNull
     public final Set<Class<? extends GenaroidPlugin>> getDependencies() {
         return dependencies;
     }
 
-    public final void addDependency(Class<? extends GenaroidPlugin> pluginClass) {
+    public final void addDependency(@NotNull Class<? extends GenaroidPlugin> pluginClass) {
         dependencies.add(pluginClass);
     }
 
-    protected final void init(PluginsManager pluginsManager, GenaroidEnvironment environment) {
+    protected final void init(@NotNull PluginsManager pluginsManager, @NotNull GenaroidEnvironment environment) {
         this.pluginsManager = pluginsManager;
         this.environment = environment;
         Class<?> clazz = this.getClass();
@@ -60,8 +68,9 @@ public abstract class GenaroidPlugin {
     protected void init() {
     }
 
-    protected final PluginsManager getPluginsManager() {
-        return pluginsManager;
+    @Nullable
+    protected final <T extends GenaroidPlugin> T getPlugin(Class<T> pluginClass) {
+        return pluginsManager.getPlugin(pluginClass);
     }
 
     protected GenaroidEnvironment getEnvironment() {

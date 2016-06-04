@@ -16,6 +16,8 @@
 
 package net.xkor.genaroid.plugins;
 
+import android.support.annotation.NonNull;
+
 import com.google.auto.service.AutoService;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
@@ -28,6 +30,7 @@ import com.sun.tools.javac.util.List;
 
 import net.xkor.genaroid.annotations.CustomListener;
 import net.xkor.genaroid.tree.GClass;
+import net.xkor.genaroid.tree.GField;
 import net.xkor.genaroid.tree.GMethod;
 import net.xkor.genaroid.wrap.BindableWrapper;
 
@@ -49,6 +52,7 @@ import javax.tools.Diagnostic;
 @AutoService(GenaroidPlugin.class)
 @GenaroidPlugin.Dependencies(ViewByIdPlugin.class)
 public class ListenersPlugin extends GenaroidPlugin {
+
     private static final String ANNOTATION_CLASS_NAME = CustomListener.class.getCanonicalName();
     private static final String[] STANDARD_LISTENER_ANNOTATIONS = new String[]{
             "net.xkor.genaroid.annotations.OnClick",
@@ -58,6 +62,14 @@ public class ListenersPlugin extends GenaroidPlugin {
             "net.xkor.genaroid.annotations.OnItemSelected",
             "net.xkor.genaroid.annotations.OnNothingSelected",
     };
+
+    private ViewByIdPlugin viewByIdPlugin;
+
+    @Override
+    protected void init() {
+        super.init();
+        viewByIdPlugin = getPlugin(ViewByIdPlugin.class);
+    }
 
     @Override
     public void process() {
@@ -186,9 +198,23 @@ public class ListenersPlugin extends GenaroidPlugin {
                         JCTree.JCVariableDecl listenerStatement = maker.VarDef(maker.Modifiers(0),
                                 utils.getName(listenerVarName), listenerType,
                                 maker.NewClass(null, null, listenerType, List.<JCTree.JCExpression>nil(), listenerImplementor.getTree()));
-                        method.getGClass().overrideMethod(bindableWrapper.getBindMethod(), true)
-                                .appendCode(listenerStatement)
-                                .appendCode("((%s) $p0.findViewById(%s)).%s(%s);", targetClassSymbol.getQualifiedName(), viewId, listenerSetter.getSimpleName(), listenerVarName);
+                        GMethod bindMethod = method.getGClass().overrideMethod(bindableWrapper.getBindMethod(), true)
+                                .appendCode(listenerStatement);
+                        GField fieldForResource = viewByIdPlugin.findFieldForResource(method.getGClass(), viewId);
+                        if (fieldForResource == null) {
+                            bindMethod.appendCode("((%s) $p0.findViewById(%s)).%s(%s);",
+                                    targetClassSymbol.getQualifiedName(), viewId, listenerSetter.getSimpleName(), listenerVarName);
+                        } else {
+                            boolean isSubClass = ((Symbol.ClassSymbol) fieldForResource.getTree().getType().type.asElement())
+                                    .isSubClass(targetClassSymbol, getEnvironment().getTypes());
+                            if (isSubClass) {
+                                bindMethod.appendCode("this.%s.%s(%s);",
+                                        fieldForResource.getName(), listenerSetter.getSimpleName(), listenerVarName);
+                            } else {
+                                bindMethod.appendCode("((%s) this.%s).%s(%s);",
+                                        targetClassSymbol.getQualifiedName(), fieldForResource.getName(), listenerSetter.getSimpleName(), listenerVarName);
+                            }
+                        }
                     }
                     GMethod listenerOverridedMethod = listenerImplementor.overrideMethod(listenerMethod, false);
                     List<Symbol.VarSymbol> listenerParameters = listenerMethod.getParameters();
@@ -235,6 +261,7 @@ public class ListenersPlugin extends GenaroidPlugin {
         return annotations;
     }
 
+    @NonNull
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         return Collections.singleton(ANNOTATION_CLASS_NAME);

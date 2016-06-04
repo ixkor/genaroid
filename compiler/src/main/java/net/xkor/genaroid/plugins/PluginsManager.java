@@ -40,7 +40,8 @@ public class PluginsManager {
         }
 
         Iterator<GenaroidPlugin> pluginsIterator = pluginsMap.values().iterator();
-        for (GenaroidPlugin plugin = pluginsIterator.next(); pluginsIterator.hasNext(); plugin = pluginsIterator.next()) {
+        while (pluginsIterator.hasNext()) {
+            GenaroidPlugin plugin = pluginsIterator.next();
             try {
                 plugin.init(this, environment);
             } catch (Throwable error) {
