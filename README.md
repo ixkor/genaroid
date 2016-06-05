@@ -1,3 +1,5 @@
+[ ![Download](https://api.bintray.com/packages/ixkor/maven/genaroid:compiler/images/download.svg) ](https://bintray.com/ixkor/maven/genaroid:compiler/_latestVersion)
+
 ## About
 **Genaroid** is an Open Source library that **speeds up** Android development.
 It takes care of the **plumbing**, and lets you concentrate on what's really important. By **simplifying** your code, it facilitates its **maintenance**.
