@@ -47,8 +47,8 @@ public class LoginFragment extends BaseFragment {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        loginField.setError(authError);
         loginField.setText(lastLogin);
+        loginField.setError(authError);
     }
 
     @OnClick(R.id.sign_in)

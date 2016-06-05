@@ -200,19 +200,29 @@ public class ListenersPlugin extends GenaroidPlugin {
                                 maker.NewClass(null, null, listenerType, List.<JCTree.JCExpression>nil(), listenerImplementor.getTree()));
                         GMethod bindMethod = method.getGClass().overrideMethod(bindableWrapper.getBindMethod(), true)
                                 .appendCode(listenerStatement);
+                        GMethod unbindMethod = method.getGClass().overrideMethod(bindableWrapper.getUnbindMethod(), true);
                         GField fieldForResource = viewByIdPlugin.findFieldForResource(method.getGClass(), viewId);
                         if (fieldForResource == null) {
                             bindMethod.appendCode("((%s) $p0.findViewById(%s)).%s(%s);",
                                     targetClassSymbol.getQualifiedName(), viewId, listenerSetter.getSimpleName(), listenerVarName);
+                            unbindMethod.prependCode("((%s) $p0.findViewById(%s)).%s(null);",
+                                    targetClassSymbol.getQualifiedName(), viewId, listenerSetter.getSimpleName());
                         } else {
-                            boolean isSubClass = ((Symbol.ClassSymbol) fieldForResource.getTree().getType().type.asElement())
+                            boolean isSubClass = fieldForResource.getTree().getType().type.asElement()
                                     .isSubClass(targetClassSymbol, getEnvironment().getTypes());
                             if (isSubClass) {
-                                bindMethod.appendCode("this.%s.%s(%s);",
-                                        fieldForResource.getName(), listenerSetter.getSimpleName(), listenerVarName);
+                                bindMethod.appendCode("this.%s.%s(%s);", fieldForResource.getName(),
+                                        listenerSetter.getSimpleName(), listenerVarName);
+                                unbindMethod.prependCode("this.%s.%s(null);", fieldForResource.getName(),
+                                        listenerSetter.getSimpleName());
                             } else {
                                 bindMethod.appendCode("((%s) this.%s).%s(%s);",
-                                        targetClassSymbol.getQualifiedName(), fieldForResource.getName(), listenerSetter.getSimpleName(), listenerVarName);
+                                        targetClassSymbol.getQualifiedName(),
+                                        fieldForResource.getName(), listenerSetter.getSimpleName(),
+                                        listenerVarName);
+                                unbindMethod.prependCode("((%s) this.%s).%s(null);",
+                                        targetClassSymbol.getQualifiedName(),
+                                        fieldForResource.getName(), listenerSetter.getSimpleName());
                             }
                         }
                     }
