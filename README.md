@@ -8,7 +8,7 @@ Example:
 ```java
 @GFragment(R.layout.login_fragment)
 public class LoginFragment extends BaseFragment {
-    @BuilderParam()
+    @BundleParam()
     private String lastLogin;
 
     @ViewById(R.id.login)
@@ -54,8 +54,8 @@ buildscript {
 apply plugin: 'com.neenbedankt.android-apt'
 
 dependencies {
-    compile 'net.xkor.genaroid:core:1.2.5'
-    apt 'net.xkor.genaroid:compiler:1.2.5'
+    compile 'net.xkor.genaroid:core:1.3.0'
+    apt 'net.xkor.genaroid:compiler:1.3.0'
 }
 ```
 
@@ -64,7 +64,7 @@ dependencies {
 * [@InstanceState](https://github.com/ixkor/genaroid/wiki#instancestate) - save and restore a field value when Activity or Fragment are recreated;
 * [@BuilderParam](https://github.com/ixkor/genaroid/wiki#builderparam) - add a field to Activity or Fragment builder;
 * [@GActivity and @GFragment](https://github.com/ixkor/genaroid/wiki#gactivity-and-gfragment);
-* [@OnClick and other envents](https://github.com/ixkor/genaroid/wiki#events);
+* [@OnClick and other events](https://github.com/ixkor/genaroid/wiki#events);
 * [@CustomListener](https://github.com/ixkor/genaroid/wiki#customlistener) - user defined events;
 
 [Full documentation](https://github.com/ixkor/genaroid/wiki)

@@ -25,7 +25,6 @@ import net.xkor.genaroid.tree.GUnit;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -117,6 +116,11 @@ public class GenaroidProcessor extends AbstractProcessor {
 
     @Override
     public Set<String> getSupportedOptions() {
-        return Collections.singleton(GenaroidEnvironment.DEBUG_MODE_OPTION_NAME);
+        HashSet<String> types = new HashSet<>();
+        types.add(GenaroidEnvironment.DEBUG_MODE_OPTION_NAME);
+        for (GenaroidPlugin processor : pluginsManager.getPlugins()) {
+            types.addAll(processor.getSupportedOptions());
+        }
+        return types;
     }
 }

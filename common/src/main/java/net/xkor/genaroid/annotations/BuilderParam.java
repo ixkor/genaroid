@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Aleksei Skoriatin
+ * Copyright (C) 2016 Aleksei Skoriatin
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface BuilderParam {
     /**
-     * The key of the injected Fragment argument or Activity extra.
+     * The key of the injected Fragment argument, Activity extra or other object with Bundle.
      *
      * @return the key, default value - name of field.
      */

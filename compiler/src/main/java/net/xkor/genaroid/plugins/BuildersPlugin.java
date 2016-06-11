@@ -45,11 +45,14 @@ import net.xkor.genaroid.wrap.BundleWrapper;
 import net.xkor.genaroid.wrap.FragmentWrapper;
 import net.xkor.genaroid.wrap.SupportFragmentWrapper;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -69,6 +72,13 @@ public class BuildersPlugin extends GenaroidPlugin {
     private static final ClassName INTENT_TYPE_NAME = ClassName.get("android.content", "Intent");
     private static final ParameterizedTypeName CLASS_T_TYPE_NAME = ParameterizedTypeName.get(CLASS_TYPE_NAME, TypeVariableName.get("T"));
     private static final ParameterizedTypeName CLASS_F_TYPE_NAME = ParameterizedTypeName.get(CLASS_TYPE_NAME, TypeVariableName.get("F"));
+    private static final String BUILDER_SUFFIX_OPTION_NAME = "bundleBuilderSuffix";
+    private static final String BASE_BUILDER_SUFFIX_OPTION_NAME = "bundleBaseBuilderSuffix";
+
+    @NonNull
+    private String builderBaseSuffix = "_BaseBuilder";
+    @NonNull
+    private String builderSuffix = "_Builder";
 
     private ActivityWrapper activityWrapper;
     private FragmentWrapper nativeFragmentWrapper;
@@ -76,6 +86,7 @@ public class BuildersPlugin extends GenaroidPlugin {
     private Symbol.ClassSymbol supportFragmentBuilderClass;
     private Symbol.ClassSymbol intentBaseBuilderWrapperClass;
     private Symbol.ClassSymbol fragmentBuilderClass;
+    private Symbol.ClassSymbol bundleBaseBuilderClass;
     private GActivityPlugin activityPlugin;
     private GFragmentPlugin fragmentPlugin;
 
@@ -84,6 +95,15 @@ public class BuildersPlugin extends GenaroidPlugin {
         super.init();
         activityPlugin = getPlugin(GActivityPlugin.class);
         fragmentPlugin = getPlugin(GFragmentPlugin.class);
+
+        String bundleBuilderSuffix = getEnvironment().getOption(BUILDER_SUFFIX_OPTION_NAME);
+        if (bundleBuilderSuffix != null) {
+            builderSuffix = bundleBuilderSuffix;
+        }
+        String bundleBaseBuilderSuffix = getEnvironment().getOption(BASE_BUILDER_SUFFIX_OPTION_NAME);
+        if (bundleBaseBuilderSuffix != null) {
+            builderBaseSuffix = bundleBaseBuilderSuffix;
+        }
     }
 
     @Override
@@ -93,6 +113,7 @@ public class BuildersPlugin extends GenaroidPlugin {
         intentBaseBuilderWrapperClass = utils.getTypeElement("net.xkor.genaroid.builders.IntentBaseBuilder");
         fragmentBuilderClass = utils.getTypeElement("net.xkor.genaroid.builders.FragmentBuilder");
         supportFragmentBuilderClass = utils.getTypeElement("net.xkor.genaroid.builders.SupportFragmentBuilder");
+        bundleBaseBuilderClass = utils.getTypeElement("net.xkor.genaroid.builders.BundleBaseBuilder");
         activityWrapper = new ActivityWrapper(utils);
         nativeFragmentWrapper = new FragmentWrapper(utils);
         supportFragmentWrapper = new SupportFragmentWrapper(utils);
@@ -101,14 +122,29 @@ public class BuildersPlugin extends GenaroidPlugin {
 
         HashMap<Symbol.ClassSymbol, BuilderClass> builders = new HashMap<>();
 
-        ArrayList<GClass> classesForBuilders = new ArrayList<>();
+        Set<GField> allFields = getEnvironment().getGElementsAnnotatedWith(BuilderParam.class, GField.class);
+        List<GField> sortedFields = new ArrayList<>(allFields);
+        Collections.sort(sortedFields, new Comparator<GField>() {
+            @Override
+            public int compare(GField field1, GField field2) {
+                return field1.getGClass().getHierarchyLevel() - field2.getGClass().getHierarchyLevel();
+            }
+        });
+
+        HashSet<GClass> classesForBuilders = new HashSet<>();
         if (activityPlugin.getActivities() != null) {
             classesForBuilders.addAll(activityPlugin.getActivities());
         }
         if (fragmentPlugin.getFragments() != null) {
             classesForBuilders.addAll(fragmentPlugin.getFragments());
         }
-        for (GClass gClass : classesForBuilders) {
+        for (GField field : allFields) {
+            classesForBuilders.add(field.getGClass());
+        }
+        ArrayList<GClass> sortedClassesForBuilders = new ArrayList<>(classesForBuilders);
+        Collections.sort(sortedClassesForBuilders, GClass.HIERARCHY_LEVEL_COMPARATOR);
+
+        for (GClass gClass : sortedClassesForBuilders) {
             Symbol.ClassSymbol currentClass = gClass.getElement();
             BuilderClass superBuilder = null;
             while (currentClass != getEnvironment().getObjectClass() && superBuilder == null) {
@@ -120,15 +156,6 @@ public class BuildersPlugin extends GenaroidPlugin {
             builder.init(gClass);
             builders.put(gClass.getElement(), builder);
         }
-
-        Set<GField> allFields = getEnvironment().getGElementsAnnotatedWith(BuilderParam.class, GField.class);
-        List<GField> sortedFields = new ArrayList<>(allFields);
-        Collections.sort(sortedFields, new Comparator<GField>() {
-            @Override
-            public int compare(GField field1, GField field2) {
-                return field1.getGClass().getHierarchyLevel() - field2.getGClass().getHierarchyLevel();
-            }
-        });
 
         for (GField field : allFields) {
             field.extractAnnotation(annotationClass);
@@ -185,6 +212,15 @@ public class BuildersPlugin extends GenaroidPlugin {
         return Collections.singleton(ANNOTATION_CLASS_NAME);
     }
 
+    @NotNull
+    @Override
+    public Set<String> getSupportedOptions() {
+        HashSet<String> options = new HashSet<>();
+        options.add(BUILDER_SUFFIX_OPTION_NAME);
+        options.add(BASE_BUILDER_SUFFIX_OPTION_NAME);
+        return options;
+    }
+
     private static class ParameterizableWrapper extends BaseClassWrapper {
         public ParameterizableWrapper(JavacElements utils) {
             super(utils, "net.xkor.genaroid.internal.Parameterizable");
@@ -229,13 +265,25 @@ public class BuildersPlugin extends GenaroidPlugin {
             isAbstract = (classSymbol.flags() & Flags.ABSTRACT) != 0;
 
             packageName = classSymbol.packge().toString();
-            baseName = classSymbol.getSimpleName().toString() + "BaseBuilder";
-            name = classSymbol.getSimpleName().toString() + "Builder";
+            String className = getClassName(classSymbol);
+            baseName = className + builderBaseSuffix;
+            name = className + builderSuffix;
 
             classBaseBuilder = TypeSpec.classBuilder(baseName).addModifiers(Modifier.PUBLIC);
             classBuilder = TypeSpec.classBuilder(name).addModifiers(Modifier.PUBLIC);
             publicConstructorBuilder = MethodSpec.constructorBuilder().addModifiers(Modifier.PUBLIC).addCode("$[");
             protectedConstructorBuilder = MethodSpec.constructorBuilder().addModifiers(Modifier.PROTECTED).addCode("$[");
+        }
+
+        @NonNull
+        private String getClassName(Symbol classSymbol) {
+            String name = classSymbol.getSimpleName().toString();
+            classSymbol = classSymbol.getEnclosingElement();
+            while (!(classSymbol instanceof Symbol.PackageSymbol)) {
+                name = classSymbol.getSimpleName().toString() + "_" + name;
+                classSymbol = classSymbol.getEnclosingElement();
+            }
+            return name;
         }
 
         public boolean init(GClass fieldGClass) {
@@ -246,9 +294,29 @@ public class BuildersPlugin extends GenaroidPlugin {
             } else if (fieldGClass.isSubClass(nativeFragmentWrapper.getClassSymbol())) {
                 initFragmentBuilder(fragmentBuilderClass, fieldGClass.getElement());
             } else {
-                return false;
+                initBaseBundleBuilder(fieldGClass.getElement());
             }
             return true;
+        }
+
+        public void initBaseBundleBuilder(Symbol.ClassSymbol classSymbol) {
+            ClassName baseBuilderClassName;
+            if (superBuilder == null) {
+                baseBuilderClassName = ClassName.get(bundleBaseBuilderClass);
+            } else {
+                baseBuilderClassName = ClassName.get(superBuilder.packageName, superBuilder.baseName);
+            }
+
+            classBaseBuilder
+                    .addTypeVariable(TypeVariableName.get("T", ParameterizedTypeName.get(ClassName.get(packageName, baseName), TypeVariableName.get("T"))))
+                    .superclass(ParameterizedTypeName.get(baseBuilderClassName, TypeVariableName.get("T")));
+            classBuilder
+                    .superclass(ParameterizedTypeName.get(ClassName.get(packageName, baseName), ClassName.get(packageName, name)));
+            protectedConstructorBuilder
+                    .addParameter(CLASS_T_TYPE_NAME, "builderClass");
+
+            protectedConstructorBuilder.addCode("super(builderClass");
+            publicConstructorBuilder.addCode("super($T.class", ClassName.get(packageName, name));
         }
 
         public void initActivityBuilder(Symbol.ClassSymbol activityClassSymbol) {

@@ -40,6 +40,9 @@ import net.xkor.genaroid.tree.GField;
 import net.xkor.genaroid.tree.GMethod;
 import net.xkor.genaroid.tree.GUnit;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -87,13 +90,18 @@ public class GenaroidEnvironment {
         voidType = maker.Type((Type) typeUtils.getNoType(TypeKind.VOID));
         objectClass = utils.getTypeElement("java.lang.Object");
 
-        debugMode = Boolean.parseBoolean(javacProcessingEnv.getOptions().get(DEBUG_MODE_OPTION_NAME));
+        debugMode = Boolean.parseBoolean(getOption(DEBUG_MODE_OPTION_NAME));
 
         // reflection
         try {
             newParserMethod = ParserFactory.class.getMethod("newParser", CharSequence.class, Boolean.TYPE, Boolean.TYPE, Boolean.TYPE);
         } catch (NoSuchMethodException ignored) {
         }
+    }
+
+    @Nullable
+    public String getOption(@NotNull String optionName) {
+        return javacProcessingEnv.getOptions().get(optionName);
     }
 
     public Pair<JCTree, JCCompilationUnit> getTreeAndTopLevel(Element e) {

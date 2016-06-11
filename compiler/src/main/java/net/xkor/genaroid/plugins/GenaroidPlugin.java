@@ -26,6 +26,7 @@ import org.jetbrains.annotations.Nullable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -40,6 +41,11 @@ public abstract class GenaroidPlugin {
 
     @NonNull
     public abstract Set<String> getSupportedAnnotationTypes();
+
+    @NotNull
+    public Set<String> getSupportedOptions() {
+        return Collections.emptySet();
+    }
 
     @NonNull
     public final Set<Class<? extends GenaroidPlugin>> getDependencies() {

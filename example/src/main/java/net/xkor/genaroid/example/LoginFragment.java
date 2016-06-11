@@ -23,6 +23,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import net.xkor.genaroid.Genaroid;
 import net.xkor.genaroid.annotations.BuilderParam;
 import net.xkor.genaroid.annotations.GFragment;
 import net.xkor.genaroid.annotations.InstanceState;
@@ -63,5 +64,19 @@ public class LoginFragment extends BaseFragment {
     @OnClick({R.id.login, R.id.password, R.id.sign_in})
     private void clickTest(View view) {
         Toast.makeText(getActivity(), "clickTest", Toast.LENGTH_LONG).show();
+        new LoginFragment_BundleBuilderTest_Builder()
+                .testParam("gfgfdg")
+                .getBundle();
     }
+
+    private class BundleBuilderTest {
+        @BuilderParam(optional = true)
+        private String testParam;
+
+        public BundleBuilderTest(Bundle bundle) {
+            Genaroid.readParams(this, bundle);
+        }
+
+    }
+
 }
