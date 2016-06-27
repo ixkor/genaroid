@@ -8,7 +8,7 @@ Example:
 ```java
 @GFragment(R.layout.login_fragment)
 public class LoginFragment extends BaseFragment {
-    @BundleParam()
+    @BuilderParam
     private String lastLogin;
 
     @ViewById(R.id.login)
