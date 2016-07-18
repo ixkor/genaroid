@@ -1,4 +1,4 @@
-![Image](https://github.com/ixkor/genaroid/blob/master/github_banner.png)
+![Image](https://github.com/ixkor/genaroid/blob/master/genaroid-logo.png)
 
 **Genaroid** is an Open Source library that **speeds up** Android development.
 It takes care of the **plumbing**, and lets you concentrate on what's really important. By **simplifying** your code, it facilitates its **maintenance**.
